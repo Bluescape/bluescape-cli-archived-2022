@@ -2,7 +2,7 @@ import type { Arguments, CommandBuilder } from "yargs";
 import ora from "ora";
 import { askBluescapeCredentials } from "./get-credentials";
 import { baseOptions, BaseOptions } from "../../shared";
-import { getServiceUrl } from "../../config";
+import { getServiceUrl } from "../../conf";
 import { Service } from "../../types";
 import { AuthService } from "../../services/auth.service";
 export type Options = BaseOptions & {

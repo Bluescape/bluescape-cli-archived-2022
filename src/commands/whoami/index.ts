@@ -19,5 +19,5 @@ export const builder: Builder = (yargs) =>
     .example([["$0 whoami"]]);
 export const handler = async (_argv: Arguments): Promise<void> => {
   const { email, firstName, lastName } = getUserInfo();
-  console.log(chalk.blue(`Logged user firstName lastName (${email}).`));
+  console.log(chalk.green(`Logged user firstName lastName (${email}).`));
 };

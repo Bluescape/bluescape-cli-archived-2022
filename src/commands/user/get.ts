@@ -20,7 +20,5 @@ export const builder: Builder = (yargs) =>
     ]);
 
 export const handler: Handler = async (argv) => {
-  console.log("vault addeddd",argv)
-  const result = await askBluescapeCredentials('s');
-  console.log("vault result",result)
+  console.log("user get",argv)
 };

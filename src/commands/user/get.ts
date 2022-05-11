@@ -1,10 +1,10 @@
 import ora from 'ora';
 
-import { Builder, Handler } from './create.types';
+import { Builder, Handler } from './get.types';
 import { baseOptions } from '../../shared';
 import { askBluescapeCredentials } from '../login/get-credentials';
 
-export const command = 'get [name]';
+export const command = 'get [id]';
 export const desc = 'get user';
 
 export const builder: Builder = (yargs) =>
@@ -14,10 +14,9 @@ export const builder: Builder = (yargs) =>
     // })
     // .positional('name', { type: 'string' })
     .example([
-      ['$0 vault create'],
-      ['$0 vault create devs'],
-      ['$0 vault create creds:aws -c secp256k1 --profile project:phoenix'],
-      ['$0 vault create creds:aws -q --json | jq -r .VaultId | pbcopy'],
+      ['$0 user get'],
+      ['$0 user get -l 100 -i 10'],
+      ['$0 user get {id}'],
     ]);
 
 export const handler: Handler = async (argv) => {

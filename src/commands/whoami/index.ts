@@ -11,7 +11,7 @@ export type Builder = CommandBuilder<Options, Options>;
 export type Handler = (argv: Arguments<Options>) => PromiseLike<void>;
 
 export const command = "whoami";
-export const desc = "show the current session user";
+export const desc = "show session user";
 
 export const builder: Builder = (yargs) =>
   yargs

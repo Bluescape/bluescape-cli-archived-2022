@@ -1,4 +1,5 @@
 import type { Arguments, CommandBuilder } from "yargs";
+import chalk from "chalk";
 import { getUserInfo } from "../../conf";
 import { BaseOptions } from "../../shared";
 
@@ -17,6 +18,6 @@ export const builder: Builder = (yargs) =>
     // .options({ ...baseOptions })
     .example([["$0 whoami"]]);
 export const handler = async (_argv: Arguments): Promise<void> => {
-  const email = getUserInfo("email");
-  console.log(`Logged user ${email}`);
+  const { email, firstName, lastName } = getUserInfo();
+  console.log(chalk.blue(`Logged user firstName lastName (${email}).`));
 };

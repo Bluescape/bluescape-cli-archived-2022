@@ -124,9 +124,9 @@ export const setUserInfo = (user: any) => {
   config.set("profiles", profiles);
 };
 
-export const getUserInfo = (key: string) => {
+export const getUserInfo = (key?: string) => {
   const { user } = getActiveProfile();
-  return user[key];
+  return key ? user[key] : user;
 };
 
 export const addProfile = (profile: any) => {

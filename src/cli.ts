@@ -3,8 +3,8 @@
  * bluescape config set instance -n|name=us -d|domain=apps.us.bluescape.com Config instance
  * bluescape config switch instance us                                      Switch instance
  * bluescape login -u|email=sathish@bluescape.com                           Login
- * bluescape get user                                                       Get user list
- * bluescape get user userId                                                Get user By Id
+ * bluescape user get                                                     Get user list
+ * bluescape user get userId                                                Get user By Id
  * bluescape delete user userId --force --new-owner-id=xx                   Delete user by user Id
  * bluescape delete user --from-file=xx.csv --new-owner-id=xx               Deletet user from csv file
  */

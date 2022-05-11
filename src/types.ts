@@ -3,6 +3,7 @@ export enum Service {
   PORTAL_API,
   IDENTITY_API,
   COLLAB,
+  CONFIG,
 }
 export enum FetchRequestType {
   Get = 'get',

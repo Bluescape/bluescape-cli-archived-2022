@@ -56,7 +56,13 @@ const schema = {
           type: "object",
           default: {},
           properties: {
-            name: {
+            id: {
+              type: "string",
+            },
+            firstName: {
+              type: "string",
+            },
+            lastName: {
               type: "string",
             },
             email: {
@@ -77,7 +83,18 @@ const config = new Conf({
   schema,
 });
 
+export const init = () => {
+  let profiles = config.get("profiles");
+  // profiles = [];
+  if (profiles.length == 0) {
+    profiles.push({});
+    config.set("profiles", profiles);
+    config.set("currentProfileIndex", 0);
+  }
+};
+
 export const getActiveProfile = (): any => {
+  init();
   const activeIndex = config.get("currentProfileIndex");
   const profiles = config.get("profiles");
   return profiles[activeIndex];
@@ -94,10 +111,39 @@ export const getServiceUrl = (serviceName: Service) => {
       return services.collab;
     case Service.IDENTITY_API:
       return services.identityApi;
+    case Service.CONFIG:
+      return services.config;
   }
+};
+
+export const setUserInfo = (user: any) => {
+  const activeIndex = config.get("currentProfileIndex");
+  const profiles = config.get("profiles");
+  const userObj = { ...profiles[activeIndex].user, ...user };
+  profiles[activeIndex].user = userObj;
+  config.set("profiles", profiles);
 };
 
 export const getUserInfo = (key: string) => {
   const { user } = getActiveProfile();
   return user[key];
+};
+
+export const addProfile = (profile: any) => {
+  const { name } = profile;
+  const profiles = config.get("profiles");
+  let index = -1;
+  profiles.forEach((profile: any, i: number) => {
+    if (name === profile.name) {
+      index = i;
+    }
+  });
+  if (index !== -1) {
+    profiles[index] = profile;
+  } else {
+    profiles.push(profile);
+    index = profiles.length - 1;
+  }
+  config.set("profiles", profiles);
+  config.set("currentProfileIndex", index);
 };

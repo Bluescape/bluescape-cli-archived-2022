@@ -23,12 +23,12 @@ export class FetchService {
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
+    headers["X-Bluescape-Internal"] = 1;
     return {
       ...config,
       headers: { ...headers },
     };
   }
-
   getUrlForService(service: Service, path = ""): Url {
     const baseUrl = getServiceUrl(service);
     // Ensure path isn't prefixed with a slash
@@ -49,13 +49,13 @@ export class FetchService {
 
       // Make the request
       const data = this.hasPayload(requestType) ? payload : null;
+      console.log(data);
       const response = await axios({
         method: requestType,
         url,
         data,
         ...config,
       });
-      console.log(data);
       return response;
     } catch (error: any) {
       throw error;

@@ -2,9 +2,10 @@ import type { Arguments, CommandBuilder } from "yargs";
 import ora from "ora";
 import { askBluescapeCredentials } from "./get-credentials";
 import { baseOptions, BaseOptions } from "../../shared";
-import { getServiceUrl } from "../../conf";
+import { getServiceUrl, setUserInfo } from "../../conf";
 import { Service } from "../../types";
 import { AuthService } from "../../services/auth.service";
+import { UserService } from "../../services/user.service";
 export type Options = BaseOptions & {
   username: string;
 };
@@ -22,17 +23,22 @@ export const builder: Builder = (yargs) =>
     .example([["$0 login"], ["$0 login {email}"]]);
 
 export const handler = async (_argv: Arguments): Promise<void> => {
-  const url = getServiceUrl(Service.ISAM);
-  console.log(url);
   const spinner = ora({
     isSilent: _argv.quiet as boolean,
   });
-  console.log(ora);
   const { email } = _argv;
   const { username, password } = await askBluescapeCredentials(email as string);
   spinner.start("Login with Bluescape");
-
-  const token = await new AuthService().login(username, password);
-  // console.log(username, password);
-  console.log(token)
+  try {
+    const token = await new AuthService().login(username, password);
+    spinner.succeed("Login Success");
+    setUserInfo({ token, email: username });
+    spinner.start("Fetching user infomation");
+    const { id, firstName, lastName } =
+    await new UserService().getSessionUser();
+    setUserInfo({ id, firstName, lastName });
+    spinner.succeed(`User ${firstName}  ${lastName} Logged`);
+  } catch (error: any) {
+    spinner.fail(error.message);
+  }
 };

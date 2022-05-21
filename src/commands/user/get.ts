@@ -2,7 +2,7 @@ import ora from 'ora';
 
 import { Builder, Handler } from './get.types';
 import { baseOptions } from '../../shared';
-import { askBluescapeCredentials } from '../login/get-credentials';
+import { askBluescapeCredentials } from '../auth/ask-credentials';
 
 export const command = 'get [id]';
 export const desc = 'get user';

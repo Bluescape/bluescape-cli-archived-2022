@@ -84,8 +84,7 @@ const config = new Conf({
 });
 
 export const init = () => {
-  let profiles = config.get("profiles");
-  // profiles = [];
+  let profiles = config.get("profiles") || [];
   if (profiles.length == 0) {
     profiles.push({});
     config.set("profiles", profiles);
@@ -105,6 +104,8 @@ export const getServiceUrl = (serviceName: Service) => {
   switch (serviceName) {
     case Service.ISAM:
       return `${services.isam}/api/v3`;
+    case Service.ISAM_GRAPQL:
+      return `${services.isam}/graphql`;
     case Service.PORTAL_API:
       return services.portalApi;
     case Service.COLLAB:
@@ -121,6 +122,12 @@ export const setUserInfo = (user: any) => {
   const profiles = config.get("profiles");
   const userObj = { ...profiles[activeIndex].user, ...user };
   profiles[activeIndex].user = userObj;
+  config.set("profiles", profiles);
+};
+export const deleteUserInfo = () => {
+  const activeIndex = config.get("currentProfileIndex");
+  const profiles = config.get("profiles");
+  profiles[activeIndex].user = {};
   config.set("profiles", profiles);
 };
 

@@ -1,11 +1,10 @@
 import type { Arguments, CommandBuilder } from "yargs";
 import ora from "ora";
-import { askBluescapeCredentials } from "./get-credentials";
+import { askBluescapeCredentials } from "./ask-credentials";
 import { baseOptions, BaseOptions } from "../../shared";
 import { getServiceUrl, setUserInfo } from "../../conf";
 import { Service } from "../../types";
-import { AuthService } from "../../services/auth.service";
-import { UserService } from "../../services/user.service";
+import { authService, userService } from "../../services";
 export type Options = BaseOptions & {
   username: string;
 };
@@ -30,14 +29,14 @@ export const handler = async (_argv: Arguments): Promise<void> => {
   const { username, password } = await askBluescapeCredentials(email as string);
   spinner.start("Login with Bluescape");
   try {
-    const token = await new AuthService().login(username, password);
+    const token = await authService.login(username, password);
     spinner.succeed("Login Success");
     setUserInfo({ token, email: username });
     spinner.start("Fetching user infomation");
     const { id, firstName, lastName } =
-    await new UserService().getSessionUser();
+    await  userService.getSessionUser();
     setUserInfo({ id, firstName, lastName });
-    spinner.succeed(`User ${firstName}  ${lastName} Logged`);
+    spinner.succeed(`User ${firstName} ${lastName} Logged`);
   } catch (error: any) {
     spinner.fail(error.message);
   }

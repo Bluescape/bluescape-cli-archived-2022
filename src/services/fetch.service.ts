@@ -1,5 +1,5 @@
-import axios, { AxiosRequestConfig, AxiosResponse } from "axios";
-import { getServiceUrl, getUserInfo } from "../conf";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
+import { deleteUserInfo, getServiceUrl, getUserInfo } from "../conf";
 import { FetchRequestType, Service, Url } from "../types";
 
 const requestTypesWithPayload: string[] = [
@@ -36,6 +36,16 @@ export class FetchService {
     return `${baseUrl}/${normalisedPath}`;
   }
 
+  async handlingCommonError(error: AxiosError) {
+    const status = error.response?.status || 500;
+    if (status > 399) {
+      if (status === 401) {
+        deleteUserInfo();
+        throw new Error("Unauthroised. Pleae login again");
+      }
+    }
+  }
+
   async request<T extends Record<string, unknown>>(
     requestType: FetchRequestType,
     url: Url,
@@ -49,7 +59,6 @@ export class FetchService {
 
       // Make the request
       const data = this.hasPayload(requestType) ? payload : null;
-      console.log(data);
       const response = await axios({
         method: requestType,
         url,
@@ -58,6 +67,7 @@ export class FetchService {
       });
       return response;
     } catch (error: any) {
+      await this.handlingCommonError(error);
       throw error;
     }
   }

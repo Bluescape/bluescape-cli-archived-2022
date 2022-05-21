@@ -15,7 +15,7 @@ import { hideBin } from "yargs/helpers";
 
 import handleError from "./handleError";
 
-clear();
+// clear();
 yargs(hideBin(process.argv))
   // Use the commands directory to scaffold.
   .commandDir("commands")

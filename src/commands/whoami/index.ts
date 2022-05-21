@@ -1,6 +1,6 @@
 import type { Arguments, CommandBuilder } from "yargs";
 import chalk from "chalk";
-import { getUserInfo } from "../../conf";
+import { getActiveProfile, getUserInfo } from "../../conf";
 import { BaseOptions } from "../../shared";
 
 export type Options = BaseOptions & {
@@ -18,6 +18,21 @@ export const builder: Builder = (yargs) =>
     // .options({ ...baseOptions })
     .example([["$0 whoami"]]);
 export const handler = async (_argv: Arguments): Promise<void> => {
-  const { email, firstName, lastName } = getUserInfo();
-  console.log(chalk.green(`Logged user firstName lastName (${email}).`));
+  const {
+    name,
+    user: { email, firstName, lastName },
+    services: { config },
+  } = getActiveProfile();
+  if (!name) {
+    console.log(chalk.red(`Active profile not found`));
+  } else {
+    console.log(chalk.green(`Instance Name: ${name}, Config: ${config} `));
+    if (!email) {
+      console.log(chalk.red(`User not logged`));
+    } else {
+      console.log(
+        chalk.green(`Logged user ${firstName} ${lastName} (${email}).`)
+      );
+    }
+  }
 };

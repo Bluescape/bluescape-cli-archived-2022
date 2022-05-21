@@ -1,7 +1,8 @@
 import { Builder, Handler } from "./set.types";
-import { askInstanceDetails } from "./get-instance";
+import { askInstanceDetails } from "./ask-instance";
 import { ConfigService } from "../../services/config.service";
 import { addProfile } from "../../conf";
+import chalk from "chalk";
 
 export const command = "set [key]";
 export const desc = "set [key]";
@@ -26,5 +27,5 @@ export const handler: Handler = async (argv) => {
     active: true,
     services: { config, isam, portalApi, collab, identityApi },
   });
-  console.log("vault result");
+  console.log(chalk.green(`$name} profile added`));
 };

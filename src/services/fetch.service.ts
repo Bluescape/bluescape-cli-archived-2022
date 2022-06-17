@@ -1,6 +1,6 @@
-import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from "axios";
-import { deleteUserInfo, getServiceUrl, getUserInfo } from "../conf";
-import { FetchRequestType, Service, Url } from "../types";
+import axios, { AxiosError, AxiosRequestConfig, AxiosResponse } from 'axios';
+import { deleteUserInfo, getServiceUrl, getUserInfo } from '../conf';
+import { FetchRequestType, Service, Url } from '../types';
 
 const requestTypesWithPayload: string[] = [
   FetchRequestType.Put,
@@ -9,7 +9,6 @@ const requestTypesWithPayload: string[] = [
 ];
 
 export class FetchService {
-  constructor() {}
 
   private hasPayload(requestType: FetchRequestType): boolean {
     return requestTypesWithPayload.includes(requestType);
@@ -18,21 +17,21 @@ export class FetchService {
   private async addServiceAuthorizationToAxiosConfig(
     config: AxiosRequestConfig = {}
   ): Promise<AxiosRequestConfig> {
-    const accessToken = getUserInfo("token");
+    const accessToken = getUserInfo('token');
     const headers = config.headers || {};
     if (accessToken) {
       headers.Authorization = `Bearer ${accessToken}`;
     }
-    headers["X-Bluescape-Internal"] = 1;
+    headers['X-Bluescape-Internal'] = 1;
     return {
       ...config,
       headers: { ...headers },
     };
   }
-  getUrlForService(service: Service, path = ""): Url {
+  getUrlForService(service: Service, path = ''): Url {
     const baseUrl = getServiceUrl(service);
     // Ensure path isn't prefixed with a slash
-    const normalisedPath = path.charAt(0) === "/" ? path.slice(1) : path;
+    const normalisedPath = path.charAt(0) === '/' ? path.slice(1) : path;
     return `${baseUrl}/${normalisedPath}`;
   }
 
@@ -41,7 +40,7 @@ export class FetchService {
     if (status > 399) {
       if (status === 401) {
         deleteUserInfo();
-        throw new Error("Unauthroised. Pleae login again");
+        throw new Error('Unauthroised. Pleae login again');
       }
     }
   }

@@ -14,7 +14,7 @@ export const builder: Builder = (yargs) =>
   ]);
 
 export const handler: Handler = async (argv) => {
-  const { name, configUrl } = await askInstanceDetails();
+const { name, configUrl } = await askInstanceDetails();
   const {
     environment_config_url: config,
     isam,

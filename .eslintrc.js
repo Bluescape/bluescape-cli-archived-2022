@@ -13,7 +13,6 @@ module.exports = {
   root: true,
   env: {
     node: true,
-    jest: true,
   },
   rules: {
     // TODO change to `error` after M1
@@ -30,20 +29,4 @@ module.exports = {
       { allowTemplateLiterals: true, avoidEscape: true },
     ],
   },
-  overrides: [
-    {
-      files: ['**.spec.ts', './test/**/*.ts'],
-      rules: {
-        '@typescript-eslint/ban-types': 'off',
-        '@typescript-eslint/no-explicit-any': 'off',
-        '@typescript-eslint/explicit-module-boundary-types': 'off',
-      },
-    },
-    {
-      files: ['**.js'],
-      rules: {
-        '@typescript-eslint/no-var-requires': 'off',
-      },
-    },
-  ],
 };

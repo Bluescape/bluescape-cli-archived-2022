@@ -1,5 +1,5 @@
-import { FetchRequestType, Service } from "../types";
-import { FetchService } from "./fetch.service";
+import { FetchRequestType, Service } from '../types';
+import { FetchService } from './fetch.service';
 
 export class ConfigService extends FetchService {
   constructor() {
@@ -7,7 +7,7 @@ export class ConfigService extends FetchService {
   }
 
   async get(inputUrl?: string): Promise<any> {
-    const path = "/";
+    const path = '/';
     const url = inputUrl
       ? inputUrl
       : this.getUrlForService(Service.CONFIG, path);

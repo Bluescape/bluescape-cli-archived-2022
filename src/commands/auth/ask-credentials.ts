@@ -1,27 +1,27 @@
-import inquirer from "inquirer";
+import inquirer from 'inquirer';
 
 export async function askBluescapeCredentials(email: string) {
   const emailPrompt = {
-    name: "username",
-    type: "input",
-    message: "Enter your Bluescape username or e-mail address:",
+    name: 'username',
+    type: 'input',
+    message: 'Enter your Bluescape username or e-mail address:',
     validate: function (value: string) {
       if (value.length) {
         return true;
       } else {
-        return "Please enter your username or e-mail address.";
+        return 'Please enter your username or e-mail address.';
       }
     },
   };
   const passPrompt = {
-    name: "password",
-    type: "password",
-    message: "Enter your password:",
+    name: 'password',
+    type: 'password',
+    message: 'Enter your password:',
     validate: function (value: string) {
       if (value.length) {
         return true;
       } else {
-        return "Please enter your password.";
+        return 'Please enter your password.';
       }
     },
   };

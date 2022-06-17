@@ -1,7 +1,5 @@
-import { AxiosError } from "axios";
-import chalk from "chalk";
-import { FetchRequestType, Service } from "../types";
-import { FetchService } from "./fetch.service";
+import { FetchRequestType, Service } from '../types';
+import { FetchService } from './fetch.service';
 
 export class UserService extends FetchService {
   constructor() {
@@ -9,7 +7,7 @@ export class UserService extends FetchService {
   }
 
   async getSessionUser(): Promise<any> {
-    const path = "/users/me";
+    const path = '/users/me';
     const url = this.getUrlForService(Service.ISAM, path);
     const { data } = await this.request(FetchRequestType.Get, url);
     return data;
@@ -48,7 +46,7 @@ export class UserService extends FetchService {
   }
 
   async getUserFromEmail(email: string, attributes: string[]) {
-    const query = `{user(email:"${email}"){${attributes.concat("\n")}}}`;
+    const query = `{user(email:"${email}"){${attributes.concat('\n')}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;

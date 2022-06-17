@@ -1,16 +1,16 @@
-import { Builder, Handler } from "./set.types";
-import { askInstanceDetails } from "./ask-instance";
-import { ConfigService } from "../../services/config.service";
-import { addProfile } from "../../conf";
-import chalk from "chalk";
+import { Builder, Handler } from './set.types';
+import { askInstanceDetails } from './ask-instance';
+import { ConfigService } from '../../services/config.service';
+import { addProfile } from '../../conf';
+import chalk from 'chalk';
 
-export const command = "set [key]";
-export const desc = "set [key]";
+export const command = 'set [key]';
+export const desc = 'set [key]';
 
 export const builder: Builder = (yargs) =>
-  yargs.positional("key", { type: "string" }).example([
+  yargs.positional('key', { type: 'string' }).example([
     // ['$0 config set'],
-    ["$0 config set instance"],
+    ['$0 config set instance'],
   ]);
 
 export const handler: Handler = async (argv) => {
@@ -27,5 +27,5 @@ export const handler: Handler = async (argv) => {
     active: true,
     services: { config, isam, portalApi, collab, identityApi },
   });
-  console.log(chalk.green(`$name} profile added`));
+  console.log(chalk.green(`${name} profile added`));
 };

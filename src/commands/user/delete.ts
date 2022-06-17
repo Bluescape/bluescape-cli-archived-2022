@@ -1,15 +1,13 @@
-import ora from "ora";
-import validator from "validator";
+import ora from 'ora';
+import validator from 'validator';
 
-import { Builder, Handler } from "./get.types";
-import { baseOptions } from "../../shared";
-import { askBluescapeCredentials } from "../auth/ask-credentials";
-import { userService } from "../../services";
-import { getJsonFromCSV } from "../../utils/csv";
-import chalk from "chalk";
+import { Builder, Handler } from './get.types';
+import { userService } from '../../services';
+import { getJsonFromCSV } from '../../utils/csv';
+import chalk from 'chalk';
 
-export const command = "delete [id]";
-export const desc = "delete user id or csv file";
+export const command = 'delete [id]';
+export const desc = 'delete user id or csv file';
 
 export const builder: Builder = (yargs) =>
   yargs
@@ -20,7 +18,7 @@ export const builder: Builder = (yargs) =>
     .example([
       // ["$0 user delete {id} --new-owner-id=xx"],
       // ["$0 user delete {id} --new-owner-id=xx --force"],
-      ["$0 user delete --from-csv=xx.csv  --new-owner-id=xx --force"],
+      ['$0 user delete --from-csv=xx.csv  --new-owner-id=xx --force'],
     ]);
 
 export const handler: Handler = async (argv) => {
@@ -28,11 +26,11 @@ export const handler: Handler = async (argv) => {
   const ownerId = newOwnerId as string;
   const hardDelte = !!force;
   if (!ownerId) {
-    throw new Error("New worksapce owner Id not proivided --new-owner-id=xx");
+    throw new Error('New worksapce owner Id not proivided --new-owner-id=xx');
   }
   await userService.validateUser(ownerId);
   if (!fromCsv) {
-    throw new Error("CSV file path not proivided --from-csv=yy.csv");
+    throw new Error('CSV file path not proivided --from-csv=yy.csv');
   }
   const spinner = ora({
     isSilent: argv.quiet as boolean,
@@ -51,7 +49,7 @@ export const handler: Handler = async (argv) => {
     spinner.start(`${i}/${users.length} :  ${email} is processing..`);
     if (validator.isEmail(email)) {
       const { data: getRes, errors: getError } =
-        await userService.getUserFromEmail(email, ["id"]);
+        await userService.getUserFromEmail(email, ['id']);
       if (getError) {
         const [{ message }] = getError as any;
         emailErrror(email, message);
@@ -69,7 +67,7 @@ export const handler: Handler = async (argv) => {
         }
       }
     } else {
-      emailErrror(email, "Invalid Email Format");
+      emailErrror(email, 'Invalid Email Format');
     }
   }
 

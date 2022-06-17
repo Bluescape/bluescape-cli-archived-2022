@@ -1,4 +1,4 @@
-import csvToJson from "csvtojson";
+import csvToJson from 'csvtojson';
 
 export const getJsonFromCSV = async (filePath: string) => {
   const json = await csvToJson({

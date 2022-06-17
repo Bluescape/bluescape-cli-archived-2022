@@ -1,8 +1,4 @@
-import ora from 'ora';
-
 import { Builder, Handler } from './get.types';
-import { baseOptions } from '../../shared';
-import { askBluescapeCredentials } from '../auth/ask-credentials';
 
 export const command = 'get [id]';
 export const desc = 'get user';
@@ -20,5 +16,5 @@ export const builder: Builder = (yargs) =>
     ]);
 
 export const handler: Handler = async (argv) => {
-  console.log("user get",argv)
+  console.log('user get',argv)
 };

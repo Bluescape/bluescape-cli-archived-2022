@@ -88,19 +88,13 @@ export const handler: Handler = async (argv) => {
 
     const progressing = `${index + 1}/${totalUsersCount} :  ${email}`;
 
-    spinner.start(
-      `${progressing} is processing..`,
-    );
+    spinner.start(`${progressing} is processing..`);
 
     // Check email format
     // If not correct then skip and continue;
 
     if (!validator.isEmail(email)) {
-      spinner.fail(
-        chalk.red(
-          `${progressing} - Invalid email format \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - Invalid email format \n`));
       continue;
     }
 
@@ -113,11 +107,7 @@ export const handler: Handler = async (argv) => {
     if (clAvailabilityErrors) {
       const [{ message }] = clAvailabilityErrors as any;
       failedUserWithReasons.push({ email, message });
-      spinner.fail(
-        chalk.red(
-          `${progressing} - Failed with ${message} \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - Failed with ${message} \n`));
       continue;
     }
 
@@ -147,11 +137,7 @@ export const handler: Handler = async (argv) => {
     if (userExistenceError) {
       const [{ message }] = userExistenceError as any;
       failedUserWithReasons.push({ email, message });
-      spinner.fail(
-        chalk.red(
-          `${progressing} - ${message} \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - ${message} \n`));
       continue;
     }
 
@@ -163,11 +149,7 @@ export const handler: Handler = async (argv) => {
     if (domain.includes(blockedDomains)) {
       const blockedDomainMsg = 'User exists. But in blocked domain list';
       failedUserWithReasons.push({ email, message: blockedDomainMsg });
-      spinner.fail(
-        chalk.red(
-          `${progressing} - ${blockedDomainMsg} \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - ${blockedDomainMsg} \n`));
       continue;
     }
 
@@ -183,11 +165,7 @@ export const handler: Handler = async (argv) => {
     if (linksErrors) {
       const [{ message }] = clAvailabilityErrors as any;
       failedUserWithReasons.push({ email, message });
-      spinner.fail(
-        chalk.red(
-          `${progressing} - Failed with ${message} \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - Failed with ${message} \n`));
       continue;
     }
     const [existingLinks] = linksData?.customLinks?.results;
@@ -206,11 +184,7 @@ export const handler: Handler = async (argv) => {
       if (linkUpdateErrors) {
         const [{ message }] = linkUpdateErrors as any;
         failedUserWithReasons.push({ email, message });
-        spinner.fail(
-          chalk.red(
-            `${progressing} - ${message} \n`,
-          ),
-        );
+        spinner.fail(chalk.red(`${progressing} - ${message} \n`));
         continue;
       }
 
@@ -239,11 +213,7 @@ export const handler: Handler = async (argv) => {
     if (createErrors) {
       const [{ message }] = createErrors as any;
       failedUserWithReasons.push({ email, message });
-      spinner.fail(
-        chalk.red(
-          `${progressing} - ${message} \n`,
-        ),
-      );
+      spinner.fail(chalk.red(`${progressing} - ${message} \n`));
       continue;
     }
 

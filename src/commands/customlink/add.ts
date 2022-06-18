@@ -13,15 +13,17 @@ export const command = 'add';
 export const desc = 'Set customlink for user from csv file';
 
 export const builder: Builder = (yargs) =>
-  yargs.example([['$0 customlink add --from-csv=xx.csv']]);
-
-const blockedDomains = ['encoress.com'];
+  yargs.example([
+    ['$0 customlink add --from-csv=xx.csv --blocked-domains=blocked.csv'],
+  ]);
 
 export const handler: Handler = async (argv) => {
   const startTime = performance.now();
 
+  let blockedDomainsList = [];
+
   // Get CSV file as an argument.
-  const { fromCsv } = argv;
+  const { fromCsv, blockedDomains } = argv;
 
   // CSV argument is missing
   if (!fromCsv) {
@@ -48,32 +50,47 @@ export const handler: Handler = async (argv) => {
   });
 
   // Find out email duplicates
-  const dupliacteEmails = toFindDuplicateElements(emails);
-  if (dupliacteEmails.length > 0) {
+  const duplicateEmails = toFindDuplicateElements(emails);
+  if (duplicateEmails.length > 0) {
     throw new Error(
-      `CSV file contains the duplicate email(s) - ${dupliacteEmails.concat(
-        '\n'
-      )}`
+      `CSV file contains the duplicate email(s) - ${duplicateEmails.concat(
+        '\n',
+      )}`,
     );
   }
 
   // Find out room name duplicates
-  const dupliacteRoomNames = toFindDuplicateElements(roomNames);
-  if (dupliacteRoomNames.length > 0) {
+  const duplicateRoomNames = toFindDuplicateElements(roomNames);
+  if (duplicateRoomNames.length > 0) {
     throw new Error(
-      `CSV file contains the duplicate room name(s) - ${dupliacteRoomNames.concat(
-        '\n'
-      )}`
+      `CSV file contains the duplicate room name(s) - ${duplicateRoomNames.concat(
+        '\n',
+      )}`,
     );
   }
 
+  const totalUsersCount = users.length;
+
   const failedUserWithReasons = [];
 
-  for await (const [index, user] of users.entries()) {
-    const progressing = index + 1;
+  // get blocked domains list json from csv
+  if (blockedDomains) {
+    const blockedDomainsListJson = await getJsonFromCSV(
+      blockedDomains as string,
+    );
+    blockedDomainsList = blockedDomainsListJson.map(
+      (values) => values['Domain Name'],
+    );
+  }
 
+  for await (const [index, user] of users.entries()) {
     const { Email: email, 'Room Name': name } = user;
-    spinner.start(`${progressing}/${users.length} :  ${email} is processing..`);
+
+    const progressing = `${index + 1}/${totalUsersCount} :  ${email}`;
+
+    spinner.start(
+      `${progressing} is processing..`,
+    );
 
     // Check email format
     // If not correct then skip and continue;
@@ -81,8 +98,8 @@ export const handler: Handler = async (argv) => {
     if (!validator.isEmail(email)) {
       spinner.fail(
         chalk.red(
-          `${progressing}/${users.length} : ${email} - Invalid email format \n`
-        )
+          `${progressing} - Invalid email format \n`,
+        ),
       );
       continue;
     }
@@ -98,8 +115,8 @@ export const handler: Handler = async (argv) => {
       failedUserWithReasons.push({ email, message });
       spinner.fail(
         chalk.red(
-          `${progressing}/${users.length} : ${email} - Failed with ${message} \n`
-        )
+          `${progressing} - Failed with ${message} \n`,
+        ),
       );
       continue;
     }
@@ -115,8 +132,8 @@ export const handler: Handler = async (argv) => {
       });
       spinner.fail(
         chalk.red(
-          `${progressing}/${users.length} : ${email} - Custom link name ${name} is not available \n`
-        )
+          `${progressing} - Custom link name ${name} is not available \n`,
+        ),
       );
       continue;
     }
@@ -131,7 +148,9 @@ export const handler: Handler = async (argv) => {
       const [{ message }] = userExistenceError as any;
       failedUserWithReasons.push({ email, message });
       spinner.fail(
-        chalk.red(`${progressing}/${users.length} : ${email} - ${message} \n`)
+        chalk.red(
+          `${progressing} - ${message} \n`,
+        ),
       );
       continue;
     }
@@ -146,8 +165,8 @@ export const handler: Handler = async (argv) => {
       failedUserWithReasons.push({ email, message: blockedDomainMsg });
       spinner.fail(
         chalk.red(
-          `${progressing}/${users.length} : ${email} - ${blockedDomainMsg} \n`
-        )
+          `${progressing} - ${blockedDomainMsg} \n`,
+        ),
       );
       continue;
     }
@@ -166,8 +185,8 @@ export const handler: Handler = async (argv) => {
       failedUserWithReasons.push({ email, message });
       spinner.fail(
         chalk.red(
-          `${progressing}/${users.length} : ${email} - Failed with ${message} \n`
-        )
+          `${progressing} - Failed with ${message} \n`,
+        ),
       );
       continue;
     }
@@ -188,15 +207,17 @@ export const handler: Handler = async (argv) => {
         const [{ message }] = linkUpdateErrors as any;
         failedUserWithReasons.push({ email, message });
         spinner.fail(
-          chalk.red(`${progressing}/${users.length} : ${email} - ${message} \n`)
+          chalk.red(
+            `${progressing} - ${message} \n`,
+          ),
         );
         continue;
       }
 
       spinner.succeed(
         chalk.green(
-          `${progressing}/${users.length} : ${email} - Custom link ${name} updated successfully! \n`
-        )
+          `${progressing} - Custom link ${name} updated successfully! \n`,
+        ),
       );
       continue;
     }
@@ -212,27 +233,28 @@ export const handler: Handler = async (argv) => {
 
     const { errors: createErrors } = await customLinkService.createCustomLink(
       createLinkPayload,
-      ['name']
+      ['name'],
     );
 
     if (createErrors) {
       const [{ message }] = createErrors as any;
       failedUserWithReasons.push({ email, message });
       spinner.fail(
-        chalk.red(`${progressing}/${users.length} : ${email} - ${message} \n`)
+        chalk.red(
+          `${progressing} - ${message} \n`,
+        ),
       );
       continue;
     }
 
     spinner.succeed(
       chalk.green(
-        `${progressing}/${users.length} : ${email} - Custom link ${name} created successfully! \n`
-      )
+        `${progressing} - Custom link ${name} created successfully! \n`,
+      ),
     );
   }
 
   const failedListCount = failedUserWithReasons.length;
-  const totalListCount = users.length;
 
   const endTime = performance.now();
 
@@ -240,21 +262,21 @@ export const handler: Handler = async (argv) => {
 
   spinner.info(
     chalk.blue(
-      `Total users: ${totalListCount}     Execution Time: ${(
+      `Total users: ${totalUsersCount}     Execution Time: ${(
         endTime - startTime
-      ).toFixed(2)} ms\n`
-    )
+      ).toFixed(2)} ms\n`,
+    ),
   );
 
   if (failedListCount === 0) {
     spinner.succeed(
       chalk.green(
-        `All users are updated with their custom link name, Successful count - ${totalListCount}\n`
-      )
+        `All users are updated with their custom link name, Successful count - ${totalUsersCount}\n`,
+      ),
     );
   } else {
     spinner.succeed(
-      chalk.green(`Passed: ${totalListCount - failedListCount}\n`)
+      chalk.green(`Passed: ${totalUsersCount - failedListCount}\n`),
     );
     spinner.fail(chalk.red(`Failed:  ${failedUserWithReasons.length}\n`));
   }

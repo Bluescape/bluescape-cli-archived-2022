@@ -49,6 +49,16 @@ export const handler: Handler = async (argv) => {
     roomNames.push(user['Room Name']);
   });
 
+  if (emails.length === 0 || roomNames.length === 0) {
+    throw new Error(
+      `CSV file is empty. Please provide atleast one user and room name.`,
+    );
+  }
+
+  if (emails.length !== roomNames.length) {
+    throw new Error(`Please provide equal number of room name and email.`);
+  }
+
   // Find out email duplicates
   const duplicateEmails = toFindDuplicateElements(emails);
   if (duplicateEmails.length > 0) {

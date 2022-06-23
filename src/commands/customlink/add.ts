@@ -138,19 +138,6 @@ export const handler: Handler = async (argv) => {
       continue;
     }
 
-    // if available check the user existence
-    // If user does not exist then create custom link as blocked
-
-    const { data: userData, errors: userExistenceError } =
-      await userService.getUserFromEmail(email, ['id']);
-
-    if (userExistenceError) {
-      const [{ message }] = userExistenceError as any;
-      failedUserWithReasons.push({ email, message });
-      spinner.fail(chalk.red(`${progressing} - ${message} \n`));
-      continue;
-    }
-
     // check the user email is in blocked list
     // If the user in blocked domain skip, failed notification and continue;
 
@@ -163,11 +150,32 @@ export const handler: Handler = async (argv) => {
       continue;
     }
 
+    // if available check the user existence
+    // If user does not exist then create user and custom link as blocked
+
+    let userDetails;
+
+    const { data, errors: userExistenceError } =
+      await userService.getUserFromEmail(email, ['id']);
+    userDetails = (data as any)?.user;
+
+    if (userExistenceError) {
+      // Create the user
+      const { data, errors: userExistenceError } =
+        await userService.createUserWithoutOrganization(email);
+
+      userDetails = data;
+      if (userExistenceError) {
+        const blockedDomainMsg = userExistenceError.message;
+        failedUserWithReasons.push({ email, message: blockedDomainMsg });
+        spinner.fail(chalk.red(`${progressing} - ${blockedDomainMsg} \n`));
+        continue;
+      }
+    }
+
     // Get user has custom link
 
-    const {
-      user: { id: ownerId },
-    } = userData as any;
+    const { id: ownerId } = userDetails as any;
 
     const { data: linksData, errors: linksErrors } =
       await customLinkService.customLinks(ownerId, ['id']);

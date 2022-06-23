@@ -36,7 +36,7 @@ export class UserService extends FetchService {
   async deleteUserById(
     userId: string,
     newOwnerId: string,
-    isHardDelete = false
+    isHardDelete = false,
   ): Promise<boolean> {
     const path = `/users/${userId}?newWorkspaceOwnerId=${newOwnerId}&permanent=${isHardDelete}`;
     const url = this.getUrlForService(Service.ISAM, path);
@@ -47,7 +47,7 @@ export class UserService extends FetchService {
 
   async getUserFromEmail(email: string, attributes: string[]) {
     const query = `{user(email:"${email}"){${attributes.concat('\n')}}}`;
-    const url = this.getUrlForService(Service.ISAM_GRAPQL);
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
   }
@@ -55,10 +55,10 @@ export class UserService extends FetchService {
   async deleteUserViaGL(
     userId: string,
     newWorkspaceOwnerId: string,
-    permanentDelete: boolean
+    permanentDelete: boolean,
   ) {
     const query = `mutation {  deleteUser(    userId:"${userId}"  newWorkspaceOwnerId: "${newWorkspaceOwnerId}"    permanentDelete: ${permanentDelete}  )}`;
-    const url = this.getUrlForService(Service.ISAM_GRAPQL);
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
   }
@@ -66,7 +66,7 @@ export class UserService extends FetchService {
   async bulkDeleteUser(
     userIds: [string],
     newOwnerId: string,
-    isHardDelete = false
+    isHardDelete = false,
   ): Promise<boolean> {
     const path = `/users/bulk_delete?newWorkspaceOwnerId=${newOwnerId}&permanent=${isHardDelete}`;
     const url = this.getUrlForService(Service.PORTAL_API, path);
@@ -77,5 +77,14 @@ export class UserService extends FetchService {
     });
 
     return true;
+  }
+
+  async createUserWithoutOrganization(email: string): Promise<any> {
+    const path = `/users`;
+    const url = this.getUrlForService(Service.ISAM, path);
+    const data = await this.request(FetchRequestType.Post, url, {
+      email,
+    });
+    return data;
   }
 }

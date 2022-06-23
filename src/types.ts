@@ -1,6 +1,6 @@
 export enum Service {
   ISAM,
-  ISAM_GRAPQL,
+  ISAM_GRAPHQL,
   PORTAL_API,
   IDENTITY_API,
   COLLAB,

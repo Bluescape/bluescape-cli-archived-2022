@@ -104,7 +104,7 @@ export const getServiceUrl = (serviceName: Service) => {
   switch (serviceName) {
     case Service.ISAM:
       return `${services.isam}/api/v3`;
-    case Service.ISAM_GRAPQL:
+    case Service.ISAM_GRAPHQL:
       return `${services.isam}/graphql`;
     case Service.PORTAL_API:
       return services.portalApi;

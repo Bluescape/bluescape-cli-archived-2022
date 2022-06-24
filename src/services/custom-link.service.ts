@@ -33,7 +33,7 @@ export class CustomLinkService extends FetchService {
     attributes: string[],
   ): Promise<any> {
     const { name, ownerId } = props;
-    const query = `mutation{createCustomLink(input:{name:"${name}", resourceType: Blocked, ownerId: "${ownerId}"}) {${attributes.concat(
+    const query = `mutation{createCustomLink(input:{name:"${name}", resourceType: Meet, ownerId: "${ownerId}"}) {${attributes.concat(
       '\n',
     )}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);

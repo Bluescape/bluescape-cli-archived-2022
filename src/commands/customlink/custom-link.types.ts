@@ -1,9 +1,10 @@
 export enum CustomLinkResourceType {
-  Blocked ,
-  Meet
+  Blocked = 'Blocked',
+  Meet = 'Meet',
 }
 export type CreateCustomLinkProps = {
   name: string;
   resourceType: CustomLinkResourceType;
   ownerId: string;
+  resourceId: string;
 };

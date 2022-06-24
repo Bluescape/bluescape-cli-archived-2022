@@ -94,7 +94,11 @@ export const handler: Handler = async (argv) => {
   }
 
   for await (const [index, user] of users.entries()) {
-    const { Email: email, 'Room Name': name } = user;
+    const { Email: userEmail, 'Room Name': roomName } = user;
+
+    // Change the case insensitive
+    const email = userEmail.toLowerCase();
+    const name = roomName.toLowerCase();
 
     const progressing = `${index + 1}/${totalUsersCount} :  ${email}`;
 
@@ -214,13 +218,20 @@ export const handler: Handler = async (argv) => {
       continue;
     }
 
+    // Create meet for user
+    const resourceId =
+      (await customLinkService.createMeeting(name, ownerId)) ?? null;
+
     // email format is correct, name available, user exist, not in blocked domain list
     // create custom link by meet and ownerId
 
     const createLinkPayload = {
       name,
       ownerId,
-      resourceType: CustomLinkResourceType.Blocked,
+      resourceType: resourceId
+        ? CustomLinkResourceType.Meet
+        : CustomLinkResourceType.Blocked,
+      resourceId,
     } as CreateCustomLinkProps;
 
     const { errors: createErrors } = await customLinkService.createCustomLink(

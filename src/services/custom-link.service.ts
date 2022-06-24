@@ -32,8 +32,12 @@ export class CustomLinkService extends FetchService {
     props: CreateCustomLinkProps,
     attributes: string[],
   ): Promise<any> {
-    const { name, ownerId } = props;
-    const query = `mutation{createCustomLink(input:{name:"${name}", resourceType: Meet, ownerId: "${ownerId}"}) {${attributes.concat(
+    const { name, ownerId, resourceType, resourceId } = props;
+    let query = `mutation{createCustomLink(input:{name:"${name}", `;
+    if (resourceId) {
+      query += `resourceId:"${resourceId}", `;
+    }
+    query += `resourceType: ${resourceType}, ownerId: "${ownerId}"}) {${attributes.concat(
       '\n',
     )}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
@@ -52,5 +56,40 @@ export class CustomLinkService extends FetchService {
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const result = await this.request(FetchRequestType.Post, url, { query });
     return result?.data as any;
+  }
+
+  /**
+   * @param name
+   * @param ownerId
+   * @return meeting id
+   */
+  async createMeeting(name: string, ownerId: string): Promise<string> {
+    try {
+      const path = `chime/meetings/host`;
+      const url = this.getUrlForService(Service.UC_CONNECTOR_URL, path);
+      const payload = {
+        name,
+        recurrence: {
+          type: 'non_recurring',
+        },
+        attendees: [],
+        providerSpecificOptions: {
+          meetingType: 'personal-room',
+          telephonySupport: true,
+        },
+        organizerId: ownerId,
+      };
+
+      console.log('url*****************', url);
+
+      const response = await this.request(FetchRequestType.Post, url, {
+        ...payload,
+      });
+
+      return response?.data?.meetingId as string;
+    } catch (error) {
+      console.warn(`createMeeting failed with this messages ${error?.message}`);
+      // throw error;
+    }
   }
 }

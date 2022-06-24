@@ -5,6 +5,7 @@ export enum Service {
   IDENTITY_API,
   COLLAB,
   CONFIG,
+  UC_CONNECTOR_URL,
 }
 export enum FetchRequestType {
   Get = 'get',

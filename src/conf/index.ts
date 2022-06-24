@@ -50,6 +50,11 @@ const schema = {
               default: 'https://identity-api.uat.alpha.dev.bluescape.io',
               format: 'url',
             },
+            ucConnectorUrl: {
+              type: 'string',
+              default: 'https://uc-connector.uat.alpha.dev.bluescape.io',
+              format: 'url',
+            },
           },
         },
         user: {
@@ -114,6 +119,8 @@ export const getServiceUrl = (serviceName: Service) => {
       return services.identityApi;
     case Service.CONFIG:
       return services.config;
+    case Service.UC_CONNECTOR_URL:
+      return `${services.ucConnectorUrl}/api/v3`;
   }
 };
 

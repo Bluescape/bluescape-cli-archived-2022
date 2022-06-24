@@ -9,13 +9,12 @@ const requestTypesWithPayload: string[] = [
 ];
 
 export class FetchService {
-
   private hasPayload(requestType: FetchRequestType): boolean {
     return requestTypesWithPayload.includes(requestType);
   }
 
   private async addServiceAuthorizationToAxiosConfig(
-    config: AxiosRequestConfig = {}
+    config: AxiosRequestConfig = {},
   ): Promise<AxiosRequestConfig> {
     const accessToken = getUserInfo('token');
     const headers = config.headers || {};
@@ -23,6 +22,7 @@ export class FetchService {
       headers.Authorization = `Bearer ${accessToken}`;
     }
     headers['X-Bluescape-Internal'] = 1;
+    headers['Cookie'] = `idToken=${accessToken}`; // Tem[porary for UC-COnnector
     return {
       ...config,
       headers: { ...headers },
@@ -49,11 +49,11 @@ export class FetchService {
     requestType: FetchRequestType,
     url: Url,
     payload?: Record<string, unknown>,
-    initialConfig?: AxiosRequestConfig
+    initialConfig?: AxiosRequestConfig,
   ): Promise<AxiosResponse<T>> {
     try {
       const config = await this.addServiceAuthorizationToAxiosConfig(
-        initialConfig
+        initialConfig,
       );
 
       // Make the request

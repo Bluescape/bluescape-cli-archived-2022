@@ -53,7 +53,8 @@ jobs:
           git add build/*
           git commit -m "Bluescape CLI publish ${{steps.package-version.outputs.current-version}} release" 
           git tag ${{steps.package-version.outputs.current-version}}
-          if [${{github.event.inputs.publicRelease}} == "true"]; then
-           git tag latest
+          echo $github.event.inputs.publicRelease
+          if [ "${{github.event.inputs.publicRelease}}" == "true"]; then
+            git tag latest
           fi
           git push --tags -f

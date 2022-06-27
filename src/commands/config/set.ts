@@ -27,5 +27,5 @@ export const handler: Handler = async (argv) => {
     active: true,
     services: { config, isam, portalApi, collab, identityApi },
   });
-  console.log(chalk.green(`$name} profile added`));
+  console.log(chalk.green(`${name} profile added`));
 };

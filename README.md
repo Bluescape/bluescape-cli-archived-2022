@@ -4,10 +4,8 @@
 you can install `bluescape` via npm.
 
 ```sh
-$ npm install bluescape-cli -g
+$ npm install bluescape/bluescape-cli@latest -g
 ```
-
-
 
 
 ## Basic Usage
@@ -38,7 +36,8 @@ $ bluescape whoami
 User Get
 ```sh
 # Get user by Id.
-$ bluescape user get <userId>
+$ bluescape user get <userId|email> 
+$ bluescape user get <userId|email>  --attributes=id,email,metadata
 ```
 
 User Delete
@@ -50,8 +49,6 @@ User Delete
 
 
 ```sh
-# Delete user by Id
-$ bluescape user delete <userId>  --new-owner-id=zANz6n3RKfNXO01a36EY --force
 
 #Delete user by email Id and CSV file
 $ bluescape user delete --from-csv=/Users/enclta042/bs/isam-cli/sample/user_delete.csv --new-owner-id=zANz6n3RKfNXO01a36EY --force

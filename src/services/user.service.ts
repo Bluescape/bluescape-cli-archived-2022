@@ -54,6 +54,14 @@ export class UserService extends FetchService {
     return data;
   }
 
+
+  async getUserById(userId: string, attributes: string[]) {
+    const query = `{user(userId:"${userId}"){${attributes.concat("\n")}}}`;
+    const url = this.getUrlForService(Service.ISAM_GRAPQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+  
   async deleteUserViaGL(
     userId: string,
     newWorkspaceOwnerId: string,

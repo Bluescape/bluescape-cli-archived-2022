@@ -25,4 +25,28 @@ jobs:
       - name: print version
          run: |
           echo ${{ steps.package-version.outputs.current-version}}
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '16.x'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Configure Git
+        working-directory: .github/scripts
+        env:
+          GITHUBPAT: ${{ secrets.GITHUBPAT }}
+        run: |
+          ./configure_git.sh
+          git checkout ${GITHUB_REF##*/}  
+      - name: remove file
+        run: |
+            rm -rf package-lock.json && sed 's/build\///g' .gitignore > .gitignore
+      - name: install and build
+        run: |
+          npm install && npm run build
+      - name: commit and tag
+        run: |
+          git add .
+          git commit -m "${{ steps.package-version.outputs.current-version}} published" 
+          git tag ${{ steps.package-version.outputs.current-version}}
+          git push --tags
+
          

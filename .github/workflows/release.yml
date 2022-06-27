@@ -44,7 +44,7 @@ jobs:
           npm install && npm run build
       - name: commit and tag
         run: |
-          git add .
+          git add build/*
           git commit -m "${{ steps.package-version.outputs.current-version}} published" 
           git tag ${{ steps.package-version.outputs.current-version}}
           git push --tags

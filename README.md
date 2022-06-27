@@ -54,3 +54,12 @@ User Delete
 $ bluescape user delete --from-csv=/Users/enclta042/bs/isam-cli/sample/user_delete.csv --new-owner-id=zANz6n3RKfNXO01a36EY --force
 ```
 
+
+## Uninstall
+
+### npm
+you can uninstall `bluescape cli` via npm.
+
+```sh
+$ npm uninstall  @bluescape/cli -g
+```

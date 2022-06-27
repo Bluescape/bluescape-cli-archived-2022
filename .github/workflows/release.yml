@@ -19,11 +19,11 @@ jobs:
       - uses: actions/checkout@v1
       - name: get build version 
         id: package-version
-        run: |
+        run:  |
           PACKAGE_VERSION=$(cat ./package.json | jq '.version' | tr -d '"')
           echo ::set-output name=current-version::$PACKAGE_VERSION
       - name: print version
-         run: |
+        run: |
           echo ${{ steps.package-version.outputs.current-version}}
       - uses: actions/setup-node@v3
         with:
@@ -48,5 +48,3 @@ jobs:
           git commit -m "${{ steps.package-version.outputs.current-version}} published" 
           git tag ${{ steps.package-version.outputs.current-version}}
           git push --tags
-
-         

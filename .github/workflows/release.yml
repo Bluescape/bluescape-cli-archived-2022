@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       publicRelease:
-        description: "If it is enabled then public build will be genreate"
+        description: "public release"
         type: boolean
         required: false
         default: false
@@ -21,7 +21,7 @@ jobs:
         id: package-version
         run:  |
           PACKAGE_VERSION=$(cat ./package.json | jq '.version' | tr -d '"')
-          [[ ${{github.event.inputs.publicRelease}} =~ "true" ]] && PACKAGE_VERSION="v${PACKAGE_VERSION}" || PACKAGE_VERSION="${PACKAGE_VERSION}-dev"
+          [[ ${{github.event.inputs.publicRelease}} =~ "true" ]] && PACKAGE_VERSION="${PACKAGE_VERSION}" || PACKAGE_VERSION="${PACKAGE_VERSION}-dev"
           echo ::set-output name=current-version::$PACKAGE_VERSION
       - name: print publish version
         run: |
@@ -51,6 +51,9 @@ jobs:
       - name: Commit and push tag.
         run: |
           git add build/*
-          git commit -m "Bluescape CLI publish v${{steps.package-version.outputs.current-version}} release" 
-          git tag v${{steps.package-version.outputs.current-version}}
-          git push --tags
+          git commit -m "Bluescape CLI publish ${{steps.package-version.outputs.current-version}} release" 
+          git tag ${{steps.package-version.outputs.current-version}}
+          if [${{github.event.inputs.publicRelease}} == "true"]; then
+           git tag latest
+          fi
+          git push --tags -f

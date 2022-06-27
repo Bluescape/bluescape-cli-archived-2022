@@ -1,10 +1,10 @@
 ## Install
 
 ### npm
-you can install `bluescape` via npm.
+you can install `bluescape cli` via npm.
 
 ```sh
-$ npm install bluescape/bluescape-cli@latest -g
+$ npm install bluescape/bluescape-cli#latest -g
 ```
 
 

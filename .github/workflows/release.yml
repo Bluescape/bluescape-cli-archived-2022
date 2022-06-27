@@ -1,0 +1,28 @@
+name: Create Release Build
+on:
+  workflow_dispatch:
+    inputs:
+      publicRelease:
+        description: "If it is enabled then public build will be genreate"
+        type: boolean
+        required: false
+        default: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: echo "$GITHUB_CONTEXT"
+      - uses: actions/checkout@v1
+      - name: get build version 
+        id: package-version
+        run: |
+          PACKAGE_VERSION=$(cat ./package.json | jq '.version' | tr -d '"')
+          echo ::set-output name=current-version::$PACKAGE_VERSION
+      - name: print version
+         run: |
+          echo ${{ steps.package-version.outputs.current-version}}
+         

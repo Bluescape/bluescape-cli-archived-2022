@@ -5,19 +5,19 @@ export async function askInstanceDetails() {
     {
       name: 'name',
       type: 'input',
-      message: 'Enter Instance name (uat, stg1):',
+      message: 'Enter Instance name (us):',
       validate: function (value: string) {
         if (value.length) {
           return true;
         } else {
-          return 'Please enter instance name like uat, stg1.';
+          return 'Please enter instance name like us';
         }
       },
     },
     {
       name: 'configUrl',
       type: 'input',
-      message: 'Enter config url:',
+      message: 'Enter config url (https://config.apps.us.bluescape.com/):',
       validate: function (value: string) {
         if (value.length) {
           return true;

@@ -27,32 +27,32 @@ const schema = {
           properties: {
             config: {
               type: 'string',
-              default: 'https://config.uat.alpha.dev.bluescape.io',
+              default: 'https://config.apps.us.bluescape.com',
               format: 'url',
             },
             isam: {
               type: 'string',
-              default: 'https://isam.uat.alpha.dev.bluescape.io',
+              default: 'https://isam.apps.us.bluescape.com',
               format: 'url',
             },
             portalApi: {
               type: 'string',
-              default: 'https://portal-api.uat.alpha.dev.bluescape.io',
+              default: 'https://portal-api.apps.us.bluescape.com',
               format: 'url',
             },
             collab: {
               type: 'string',
-              default: 'https://collab.uat.alpha.dev.bluescape.io',
+              default: 'https://collab.apps.us.bluescape.com',
               format: 'url',
             },
             identityApi: {
               type: 'string',
-              default: 'https://identity-api.uat.alpha.dev.bluescape.io',
+              default: 'https://identity-api.apps.us.bluescape.com',
               format: 'url',
             },
             ucConnectorUrl: {
               type: 'string',
-              default: 'https://uc-connector.uat.alpha.dev.bluescape.io',
+              default: 'https://uc-connector.apps.us.bluescape.com',
               format: 'url',
             },
           },

@@ -41,7 +41,6 @@ export class UserService extends FetchService {
     const path = `/users/${userId}?newWorkspaceOwnerId=${newOwnerId}&permanent=${isHardDelete}`;
     const url = this.getUrlForService(Service.ISAM, path);
     const { data } = await this.request(FetchRequestType.Delete, url);
-    console.log(data);
     return true;
   }
 

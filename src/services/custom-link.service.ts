@@ -81,8 +81,6 @@ export class CustomLinkService extends FetchService {
         organizerId: ownerId,
       };
 
-      console.log('url*****************', url);
-
       const response = await this.request(FetchRequestType.Post, url, {
         ...payload,
       });
@@ -90,7 +88,7 @@ export class CustomLinkService extends FetchService {
       return response?.data?.meetingId as string;
     } catch (error) {
       console.warn(`createMeeting failed with this messages ${error?.message}`);
-      // throw error;
+      throw error;
     }
   }
 }

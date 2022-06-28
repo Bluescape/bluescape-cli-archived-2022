@@ -37,9 +37,10 @@ export class CustomLinkService extends FetchService {
     if (resourceId) {
       query += `resourceId:"${resourceId}", `;
     }
-    query += `resourceType: ${resourceType}, ownerId: "${ownerId}"}) {${attributes.concat(
-      '\n',
-    )}}}`;
+    if (ownerId) {
+      query += `ownerId:"${ownerId}", `;
+    }
+    query += `resourceType: ${resourceType}}) {${attributes.concat('\n')}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const result = await this.request(FetchRequestType.Post, url, { query });
     return result?.data as any;

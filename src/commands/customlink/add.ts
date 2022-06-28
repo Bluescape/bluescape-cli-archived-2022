@@ -17,30 +17,10 @@ export const builder: Builder = (yargs) =>
     ['$0 customlink add --from-csv=xx.csv --blocked-domains=blocked.csv'],
   ]);
 
-export const handler: Handler = async (argv) => {
-  const startTime = performance.now();
+const toFindDuplicateElements = (ele: string[]) =>
+  ele.filter((item, index) => ele.indexOf(item) !== index);
 
-  let blockedDomainsList = [];
-
-  // Get CSV file as an argument.
-  const { fromCsv, blockedDomains } = argv;
-
-  // CSV argument is missing
-  if (!fromCsv) {
-    throw new Error('CSV file path not proivided --from-csv=yy.csv');
-  }
-
-  // Loading
-  const spinner = ora({
-    isSilent: argv.quiet as boolean,
-  });
-
-  // get user json from csv
-  const users = await getJsonFromCSV(fromCsv as string);
-
-  const toFindDuplicateElements = (ele: string[]) =>
-    ele.filter((item, index) => ele.indexOf(item) !== index);
-
+const csvFileDataValidation = (users: Array<Record<string, string>>): void => {
   // Finding duplicates in user array
   const emails: string[] = [];
   const roomNames: string[] = [];
@@ -78,6 +58,30 @@ export const handler: Handler = async (argv) => {
       )}`,
     );
   }
+};
+
+export const handler: Handler = async (argv) => {
+  const startTime = performance.now();
+
+  let blockedDomainsList = [];
+
+  // Get CSV file as an argument.
+  const { fromCsv, blockedDomains } = argv;
+
+  // CSV argument is missing
+  if (!fromCsv) {
+    throw new Error('CSV file path not proivided --from-csv=yy.csv');
+  }
+
+  // Loading
+  const spinner = ora({
+    isSilent: argv.quiet as boolean,
+  });
+
+  // get user json from csv
+  const users = await getJsonFromCSV(fromCsv as string);
+
+  csvFileDataValidation(users);
 
   const totalUsersCount = users.length;
 
@@ -108,7 +112,9 @@ export const handler: Handler = async (argv) => {
     // If not correct then skip and continue;
 
     if (!validator.isEmail(email)) {
-      spinner.fail(chalk.red(`${progressing} - Invalid email format \n`));
+      const message = `Invalid email format `;
+      failedUserWithReasons.push({ email, message });
+      spinner.fail(chalk.red(`${progressing} - ${message} \n`));
       continue;
     }
 
@@ -145,82 +151,76 @@ export const handler: Handler = async (argv) => {
     // check the user email is in blocked list
     // If the user in blocked domain skip, failed notification and continue;
 
-    const domain = email.substring(email.indexOf('@') + 1);
-
-    if (domain.includes(blockedDomains)) {
+    const domain = email.substring(email.indexOf('@') + 1) as string;
+    if (blockedDomainsList.includes(domain)) {
       const blockedDomainMsg = 'User exists. But in blocked domain list';
       failedUserWithReasons.push({ email, message: blockedDomainMsg });
       spinner.fail(chalk.red(`${progressing} - ${blockedDomainMsg} \n`));
       continue;
     }
 
-    // if available check the user existence
-    // If user does not exist then create user and custom link as blocked
+    // if name is available check the user existence
+    // If user does not exist then create custom link as blocked
 
-    let userDetails;
+    let userDetails: Record<string, unknown>;
 
     const { data, errors: userExistenceError } =
       await userService.getUserFromEmail(email, ['id']);
-    userDetails = (data as any)?.user;
 
     if (userExistenceError) {
-      // Create the user
-      const { data, errors: userExistenceError } =
-        await userService.createUserWithoutOrganization(email);
-
-      userDetails = data;
-      if (userExistenceError) {
-        const blockedDomainMsg = userExistenceError.message;
-        failedUserWithReasons.push({ email, message: blockedDomainMsg });
-        spinner.fail(chalk.red(`${progressing} - ${blockedDomainMsg} \n`));
-        continue;
-      }
+      const [{ message }] = userExistenceError as any;
+      failedUserWithReasons.push({ email, message });
+      spinner.fail(chalk.red(`${progressing} - ${message} \n`));
     }
 
-    // Get user has custom link
+    userDetails = (data as any)?.user || {};
 
     const { id: ownerId } = userDetails as any;
+    let resourceId: string;
 
-    const { data: linksData, errors: linksErrors } =
-      await customLinkService.customLinks(ownerId, ['id']);
+    if (ownerId) {
+      // Get user has custom link
+      const { data: linksData, errors: linksErrors } =
+        await customLinkService.customLinks(ownerId, ['id']);
 
-    if (linksErrors) {
-      const [{ message }] = clAvailabilityErrors as any;
-      failedUserWithReasons.push({ email, message });
-      spinner.fail(chalk.red(`${progressing} - Failed with ${message} \n`));
-      continue;
-    }
-    const [existingLinks] = linksData?.customLinks?.results;
-
-    // if yes update custom link
-    if (existingLinks && existingLinks?.id) {
-      const updateCustomLinkPayload = {
-        id: existingLinks.id,
-        name,
-      };
-      const { errors: linkUpdateErrors } =
-        await customLinkService.updateCustomLink(updateCustomLinkPayload, [
-          'id',
-        ]);
-
-      if (linkUpdateErrors) {
-        const [{ message }] = linkUpdateErrors as any;
+      if (linksErrors) {
+        const [{ message }] = clAvailabilityErrors as any;
         failedUserWithReasons.push({ email, message });
-        spinner.fail(chalk.red(`${progressing} - ${message} \n`));
+        spinner.fail(chalk.red(`${progressing} - Failed with ${message} \n`));
+        continue;
+      }
+      const [existingLinks] = linksData?.customLinks?.results;
+
+      // if yes update custom link
+      if (existingLinks && existingLinks?.id) {
+        const updateCustomLinkPayload = {
+          id: existingLinks.id,
+          name,
+        };
+        const { errors: linkUpdateErrors } =
+          await customLinkService.updateCustomLink(updateCustomLinkPayload, [
+            'id',
+          ]);
+
+        if (linkUpdateErrors) {
+          const [{ message }] = linkUpdateErrors as any;
+          failedUserWithReasons.push({ email, message });
+          spinner.fail(chalk.red(`${progressing} - ${message} \n`));
+          continue;
+        }
+
+        spinner.succeed(
+          chalk.green(
+            `${progressing} - Custom link ${name} updated successfully! \n`,
+          ),
+        );
         continue;
       }
 
-      spinner.succeed(
-        chalk.green(
-          `${progressing} - Custom link ${name} updated successfully! \n`,
-        ),
-      );
-      continue;
+      // Create meet for user
+      resourceId =
+        (await customLinkService.createMeeting(name, ownerId)) ?? undefined;
     }
-
-    // Create meet for user
-    const resourceId =
-      (await customLinkService.createMeeting(name, ownerId)) ?? null;
 
     // email format is correct, name available, user exist, not in blocked domain list
     // create custom link by meet and ownerId

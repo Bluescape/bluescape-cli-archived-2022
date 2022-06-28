@@ -1,8 +1,11 @@
 export enum Service {
   ISAM,
+  ISAM_GRAPHQL,
   PORTAL_API,
   IDENTITY_API,
   COLLAB,
+  CONFIG,
+  UC_CONNECTOR_URL,
 }
 export enum FetchRequestType {
   Get = 'get',

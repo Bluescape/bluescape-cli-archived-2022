@@ -1,10 +1,10 @@
 ## Install
 
 ### npm
-you can install `bluescape` via npm.
+you can install `bluescape cli` via npm.
 
 ```sh
-$ npm install bluescape/bluescape-cli@latest -g
+$ npm install bluescape/bluescape-cli#latest -g
 ```
 
 
@@ -57,3 +57,12 @@ $ bluescape user delete --from-csv=./sample/user_delete.csv --new-owner-id=zANz6
 $ bluescape customlink add --from-csv=./sample/customlink.csv --blocked-domains=./sample/blocked-domains.csv
 ```
 
+
+## Uninstall
+
+### npm
+you can uninstall `bluescape cli` via npm.
+
+```sh
+$ npm uninstall  @bluescape/cli -g
+```

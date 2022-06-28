@@ -46,5 +46,4 @@ export const handler: Handler = async (argv) => {
     spinner.fail(`User ${userKey} fetch failed. ${message}`);
   }
   spinner.succeed(chalk.green(JSON.stringify(getRes, null,2)));
-
 };

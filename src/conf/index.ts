@@ -1,75 +1,80 @@
-import { Service } from "../types";
+import { Service } from '../types';
 
-const Conf = require("conf");
+const Conf = require('conf');
 
 const schema = {
   currentProfileIndex: {
-    type: "number",
+    type: 'number',
     default: 0,
   },
   profiles: {
-    type: "array",
+    type: 'array',
     items: {
-      type: "object",
+      type: 'object',
       default: {},
       properties: {
         name: {
-          type: "string",
-          default: "us",
+          type: 'string',
+          default: 'us',
         },
         active: {
-          type: "boolean",
+          type: 'boolean',
           default: false,
         },
         services: {
-          type: "object",
+          type: 'object',
           default: {},
           properties: {
             config: {
-              type: "string",
-              default: "https://config.uat.alpha.dev.bluescape.io",
-              format: "url",
+              type: 'string',
+              default: 'https://config.uat.alpha.dev.bluescape.io',
+              format: 'url',
             },
             isam: {
-              type: "string",
-              default: "https://isam.uat.alpha.dev.bluescape.io",
-              format: "url",
+              type: 'string',
+              default: 'https://isam.uat.alpha.dev.bluescape.io',
+              format: 'url',
             },
             portalApi: {
-              type: "string",
-              default: "https://portal-api.uat.alpha.dev.bluescape.io",
-              format: "url",
+              type: 'string',
+              default: 'https://portal-api.uat.alpha.dev.bluescape.io',
+              format: 'url',
             },
             collab: {
-              type: "string",
-              default: "https://collab.uat.alpha.dev.bluescape.io",
-              format: "url",
+              type: 'string',
+              default: 'https://collab.uat.alpha.dev.bluescape.io',
+              format: 'url',
             },
             identityApi: {
-              type: "string",
-              default: "https://identity-api.uat.alpha.dev.bluescape.io",
-              format: "url",
+              type: 'string',
+              default: 'https://identity-api.uat.alpha.dev.bluescape.io',
+              format: 'url',
+            },
+            ucConnectorUrl: {
+              type: 'string',
+              default: 'https://uc-connector.uat.alpha.dev.bluescape.io',
+              format: 'url',
             },
           },
         },
         user: {
-          type: "object",
+          type: 'object',
           default: {},
           properties: {
             id: {
-              type: "string",
+              type: 'string',
             },
             firstName: {
-              type: "string",
+              type: 'string',
             },
             lastName: {
-              type: "string",
+              type: 'string',
             },
             email: {
-              type: "string",
+              type: 'string',
             },
             token: {
-              type: "string",
+              type: 'string',
             },
           },
         },
@@ -79,23 +84,23 @@ const schema = {
 };
 
 const config = new Conf({
-  encryptionKey: "gyjcdyitfuykghfkhjfhvgfgfhjhfgfjfhf",
+  encryptionKey: 'gyjcdyitfuykghfkhjfhvgfgfhjhfgfjfhf',
   schema,
 });
 
 export const init = () => {
-  let profiles = config.get("profiles") || [];
+  const profiles = config.get('profiles') || [];
   if (profiles.length == 0) {
     profiles.push({});
-    config.set("profiles", profiles);
-    config.set("currentProfileIndex", 0);
+    config.set('profiles', profiles);
+    config.set('currentProfileIndex', 0);
   }
 };
 
 export const getActiveProfile = (): any => {
   init();
-  const activeIndex = config.get("currentProfileIndex");
-  const profiles = config.get("profiles");
+  const activeIndex = config.get('currentProfileIndex');
+  const profiles = config.get('profiles');
   return profiles[activeIndex];
 };
 
@@ -104,7 +109,7 @@ export const getServiceUrl = (serviceName: Service) => {
   switch (serviceName) {
     case Service.ISAM:
       return `${services.isam}/api/v3`;
-    case Service.ISAM_GRAPQL:
+    case Service.ISAM_GRAPHQL:
       return `${services.isam}/graphql`;
     case Service.PORTAL_API:
       return services.portalApi;
@@ -114,21 +119,23 @@ export const getServiceUrl = (serviceName: Service) => {
       return services.identityApi;
     case Service.CONFIG:
       return services.config;
+    case Service.UC_CONNECTOR_URL:
+      return `${services.ucConnectorUrl}/api/v3`;
   }
 };
 
 export const setUserInfo = (user: any) => {
-  const activeIndex = config.get("currentProfileIndex");
-  const profiles = config.get("profiles");
+  const activeIndex = config.get('currentProfileIndex');
+  const profiles = config.get('profiles');
   const userObj = { ...profiles[activeIndex].user, ...user };
   profiles[activeIndex].user = userObj;
-  config.set("profiles", profiles);
+  config.set('profiles', profiles);
 };
 export const deleteUserInfo = () => {
-  const activeIndex = config.get("currentProfileIndex");
-  const profiles = config.get("profiles");
+  const activeIndex = config.get('currentProfileIndex');
+  const profiles = config.get('profiles');
   profiles[activeIndex].user = {};
-  config.set("profiles", profiles);
+  config.set('profiles', profiles);
 };
 
 export const getUserInfo = (key?: string) => {
@@ -138,7 +145,7 @@ export const getUserInfo = (key?: string) => {
 
 export const addProfile = (profile: any) => {
   const { name } = profile;
-  const profiles = config.get("profiles");
+  const profiles = config.get('profiles');
   let index = -1;
   profiles.forEach((profile: any, i: number) => {
     if (name === profile.name) {
@@ -151,6 +158,6 @@ export const addProfile = (profile: any) => {
     profiles.push(profile);
     index = profiles.length - 1;
   }
-  config.set("profiles", profiles);
-  config.set("currentProfileIndex", index);
+  config.set('profiles', profiles);
+  config.set('currentProfileIndex', index);
 };

@@ -1,12 +1,11 @@
-import ora from "ora";
-import validator from "validator";
+import chalk from 'chalk';
+import ora from 'ora';
+import validator from 'validator';
+import { userService } from '../../services';
+import { Builder, Handler } from './get.types';
 
-import { Builder, Handler } from "./get.types";
-import { userService } from "../../services";
-import chalk from "chalk";
-
-export const command = "get [id]";
-export const desc = "get user by id/email";
+export const command = 'get [id]';
+export const desc = 'get user by id/email';
 
 export const builder: Builder = (yargs) =>
   yargs
@@ -15,9 +14,9 @@ export const builder: Builder = (yargs) =>
     // })
     // .positional('name', { type: 'string' })
     .example([
-      ["$0 user get"],
-      ["$0 user get -l 100 -i 10"],
-      ["$0 user get {id}"],
+      ['$0 user get'],
+      ['$0 user get -l 100 -i 10'],
+      ['$0 user get {id}'],
     ]);
 
 export const handler: Handler = async (argv) => {
@@ -29,10 +28,10 @@ export const handler: Handler = async (argv) => {
 
   const { id, attributes } = argv;
   const resAttriubutes = (attributes as string[]) || [
-    "id",
-    "firstName",
-    "email",
-    "lastName",
+    'id',
+    'firstName',
+    'email',
+    'lastName',
   ];
   const userKey = id as string;
   if (validator.isEmail(userKey as string)) {
@@ -45,5 +44,5 @@ export const handler: Handler = async (argv) => {
     const [{ message }] = getError as any;
     spinner.fail(`User ${userKey} fetch failed. ${message}`);
   }
-  spinner.succeed(chalk.green(JSON.stringify(getRes, null,2)));
+  spinner.succeed(chalk.green(JSON.stringify(getRes, null, 2)));
 };

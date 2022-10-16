@@ -53,7 +53,7 @@ export class UserService extends FetchService {
 
 
   async getUserById(userId: string, attributes: string[]) {
-    const query = `{user(userId:"${userId}"){${attributes.concat("\n")}}}`;
+    const query = `{user(userId:"${userId}"){${attributes.concat('\n')}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;

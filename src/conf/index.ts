@@ -27,33 +27,33 @@ const schema = {
           properties: {
             config: {
               type: 'string',
-              default: 'https://config.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://config.my.bluescape.io',
+              // format: 'url',
             },
             isam: {
               type: 'string',
-              default: 'https://isam.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://isam.my.bluescape.io',
+              // format: 'url',
             },
             portalApi: {
               type: 'string',
-              default: 'https://portal-api.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://portal-api.my.bluescape.io',
+              // format: 'url',
             },
             collab: {
               type: 'string',
-              default: 'https://collab.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://collab.my.bluescape.io',
+              // format: 'url',
             },
             identityApi: {
               type: 'string',
-              default: 'https://identity-api.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://identity-api.my.bluescape.io',
+              // format: 'url',
             },
             ucConnectorUrl: {
               type: 'string',
-              default: 'https://uc-connector.apps.us.bluescape.com',
-              format: 'url',
+              default: 'https://uc-connector.my.bluescape.io',
+              // format: 'url',
             },
           },
         },
@@ -101,6 +101,7 @@ export const getActiveProfile = (): any => {
   init();
   const activeIndex = config.get('currentProfileIndex');
   const profiles = config.get('profiles');
+  // console.log('\n\n profile ==>', profiles, profiles[activeIndex]);
   return profiles[activeIndex];
 };
 

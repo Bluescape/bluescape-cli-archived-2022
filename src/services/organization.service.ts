@@ -29,6 +29,27 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
+  async getOrganizationMemberByEmail(orgnaizationId: string, userEmail: string, userAttributes: string[], roleAttributes: string[]): Promise<any> {
+    const query = `{organization(organizationId:"${orgnaizationId}"){
+      members(filtering: { user : { email : { eq: "${userEmail}"}}}) {
+        results {
+          member {
+            __typename 
+            ... on User {
+              ${userAttributes.concat('\n')}
+            }
+          }
+          organizationRole {
+            ${roleAttributes.concat('\n')}
+          }
+        }
+      }
+    }}`;
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+
   async getOrganizationMembers(orgnaizationId: string, userAttributes: string[], roleAttributes: string[], pageSize: number, cursor?: string): Promise<any> {
     let options: any = `pagination: { pageSize: ${pageSize} } `;
     if (cursor) {

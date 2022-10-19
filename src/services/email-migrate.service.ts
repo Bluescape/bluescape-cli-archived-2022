@@ -167,26 +167,4 @@ export class EmailMigrationService extends FetchService {
     }
     return true;
   }
-
-  async validateOrganizationExistence(
-    userEmail: string,
-    roleType: ApplicationRole,
-  ): Promise<any> {
-    const { data, errors: userExistenceError } =
-      await userService.getUserFromEmail(userEmail, [
-        'id',
-        'applicationRole{type}',
-      ]);
-    if (userExistenceError) {
-      const [{ message }] = userExistenceError as any;
-      return { error: message };
-    }
-    const sessionUser = (data as any)?.user || {};
-
-    // Do Not Allow to perform this Action other than Instance Admin
-    if (sessionUser?.applicationRole?.type !== roleType) {
-      return false;
-    }
-    return true;
-  }
 }

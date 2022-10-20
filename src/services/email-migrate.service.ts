@@ -167,4 +167,76 @@ export class EmailMigrationService extends FetchService {
     }
     return true;
   }
+
+  async getOrganizationMemberByEmail(
+    organizationId: string,
+    email: string,
+  ): Promise<any> {
+    const userAttributes = ['id', 'email'];
+    const roleAttributes = ['id', 'type'];
+    const { data, errors: memberExistenceError } = await organizationService.getOrganizationMemberByEmail(
+      organizationId,
+      email,
+      userAttributes,
+      roleAttributes,
+    );
+
+    if (memberExistenceError) {
+      const [{ message }] = memberExistenceError as any;
+      return { error: message };
+    }
+    const orgMember =
+    (data as any)?.organization?.members?.results || [];
+
+    let member;
+    
+    if (orgMember.length > 0) {
+      member = {
+        id: orgMember[0].member.id,
+        email: orgMember[0].member.email,
+        role: {
+          id: orgMember[0].organizationRole.id,
+          type: orgMember[0].organizationRole.type,
+        },
+      };
+    }
+    return member;
+  }
+
+  async addMemberToOrganization(
+    organizationId: string,
+    userId: string,
+    organizationRoleId: string,
+  ): Promise<any> {
+    const userAttributes = ['id', 'email'];
+    const roleAttributes = ['id', 'type'];
+    const { data, errors: existenceError } = await organizationService.addMemberToOrganization(
+      organizationId,
+      userId,
+      organizationRoleId,
+      userAttributes,
+      roleAttributes,
+    );
+
+    if (existenceError) {
+      const [{ message }] = existenceError as any;
+      return { error: message };
+    }
+    const orgMember =
+    (data as any)?.addMember || {};
+
+    let member;
+    
+    if (valueExists(orgMember)) {
+      member = {
+        id: orgMember.member.id,
+        email: orgMember.member.email,
+        role: {
+          id: orgMember.organizationRole.id,
+          type: orgMember.organizationRole.type,
+        },
+      };
+    }
+    return member;
+  }
 }

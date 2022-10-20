@@ -1,11 +1,19 @@
 import chalk from 'chalk';
 import ora from 'ora';
 import { getActiveProfile } from '../../conf';
-import { emailMigrationService, organizationService } from '../../services';
-import { csvFileDataValidation } from '../../services/email-migrate.service';
+import {
+  emailMigrationService,
+  organizationService,
+  userService,
+} from '../../services';
+import {
+  csvFileDataValidation,
+  validateEmail,
+} from '../../services/email-migrate.service';
 import { getJsonFromCSV } from '../../utils/csv';
+import { valueExists } from '../../utils/validators';
 import { Builder, Handler } from '../user/get.types';
-import { ApplicationRole } from '../user/role.types';
+import { ApplicationRole, Roles } from '../user/role.types';
 import { askOrganizationId } from './ask-migration-information';
 
 export const command = 'execute';
@@ -58,20 +66,21 @@ export const handler: Handler = async (argv) => {
     );
     return;
   }
+
   const organizationId = await askOrganizationId();
 
   // Validate if the provided organization exists
-  const organization = await organizationService.getOrganizationById(
+  const {data , error: errInFetchingOrg } = await organizationService.getOrganizationById(
     organizationId,
-    ['id', 'canHaveGuests', 'isGuestInviteApprovalRequired'],
   );
-  if (organization.error) {
+  if (errInFetchingOrg) {
     spinner.fail(
-      chalk.red(`Error in getting Organization ${organizationId} details`),
+      chalk.red(`Error in getting Organization ${organizationId} details ${errInFetchingOrg}`),
     );
     return;
   }
-  if (!organization?.data) {
+  const organization = (data as any)?.organization || {};
+  if (!organization) {
     spinner.fail(chalk.red(`Organization ${organizationId} not found`));
     return;
   }

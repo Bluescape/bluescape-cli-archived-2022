@@ -6,14 +6,22 @@ export class OrganizationService extends FetchService {
     super();
   }
 
-  async getOrganizationById(orgnaizationId: string, attributes: string[]): Promise<any> {
-    const query = `{organization(organizationId:"${orgnaizationId}"){${attributes.concat('\n')}}}`;
+  async getOrganizationById(
+    orgnaizationId: string
+  ): Promise<any> {
+    const attributes = ['id', 'canHaveGuests', 'isGuestInviteApprovalRequired', 'defaultOrganizationUserRole { id type }'];
+    const query = `{organization(organizationId:"${orgnaizationId}"){${attributes.concat(
+      '\n',
+    )}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
   }
 
-  async getOrganizationOwner(orgnaizationId: string, attributes: string[]): Promise<any> {
+  async getOrganizationOwner(
+    orgnaizationId: string,
+    attributes: string[],
+  ): Promise<any> {
     const query = `{organization(organizationId:"${orgnaizationId}"){members(filtering: { organizationRole: { type: {eq: "owner"}} }){
       results {
         member {
@@ -29,7 +37,12 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
-  async getOrganizationMemberByEmail(orgnaizationId: string, userEmail: string, userAttributes: string[], roleAttributes: string[]): Promise<any> {
+  async getOrganizationMemberByEmail(
+    orgnaizationId: string,
+    userEmail: string,
+    userAttributes: string[],
+    roleAttributes: string[],
+  ): Promise<any> {
     const query = `{organization(organizationId:"${orgnaizationId}"){
       members(filtering: { user : { email : { eq: "${userEmail}"}}}) {
         results {
@@ -50,7 +63,13 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
-  async getOrganizationMembers(orgnaizationId: string, userAttributes: string[], roleAttributes: string[], pageSize: number, cursor?: string): Promise<any> {
+  async getOrganizationMembers(
+    orgnaizationId: string,
+    userAttributes: string[],
+    roleAttributes: string[],
+    pageSize: number,
+    cursor?: string,
+  ): Promise<any> {
     let options: any = `pagination: { pageSize: ${pageSize} } `;
     if (cursor) {
       options = `pagination: { pageSize: ${pageSize} }, cursor: "${cursor}"`;
@@ -73,6 +92,34 @@ export class OrganizationService extends FetchService {
         }
       }
     }}`;
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+
+  async addMemberToOrganization(
+    orgnaizationId: string,
+    userId: string,
+    organizationRoleId: string,
+    userAttributes: string[],
+    roleAttributes: string[],
+  ): Promise<any> {
+    const query = `mutation{addMember(
+      organizationId:"${orgnaizationId}", 
+      input: { organizationRoleId: "${organizationRoleId}" , id: "${userId}"}) {
+        licenseLevel
+        organizationRole {
+          ${roleAttributes.concat('\n')}
+        }
+        member {
+          __typename 
+          ... on User {
+            ${userAttributes.concat('\n')}
+          }
+        }
+      }
+    }`;
+
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;

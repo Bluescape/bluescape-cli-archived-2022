@@ -7,7 +7,7 @@ export async function askOrganizationId(): Promise<string> {
     type: 'input',
     message: 'Enter the Organization Id:',
     validate: function (value: string) {
-      if (value.length && isId(value)) {
+      if (isId(value)) {
         return true;
       } else {
         return 'Please enter valid organizationId.';

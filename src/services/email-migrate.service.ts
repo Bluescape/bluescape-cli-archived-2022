@@ -1,6 +1,6 @@
 import validator from 'validator';
-import { organizationService, userService } from '.';
-import { ApplicationRole } from '../commands/user/role.types';
+import { organizationService, userService } from './index';
+import { Roles } from '../commands/user/role.types';
 import { Email } from '../types';
 import { valueExists } from '../utils/validators';
 import { FetchService } from './fetch.service';
@@ -11,14 +11,8 @@ export interface MappedEmailInformation {
   workspaceOwner?: Email;
 }
 
-const toFindDuplicateElements = (ele: string[], strict = false) => {
-  return ele.filter((item, index) => {
-    if (strict) {
-      if (item.length > 0) ele.indexOf(item) !== index;
-    }
-    ele.indexOf(item) !== index;
-  });
-};
+const toFindDuplicateElements = (ele: string[]) =>
+  ele.filter((item, index) => (ele.indexOf(item) !== index) && item.length>0);
 
 export const csvFileDataValidation = (
   mappingData: Array<Record<string, string>>,
@@ -26,37 +20,32 @@ export const csvFileDataValidation = (
   // Finding duplicates in user emails array
   const mappedEmails: any[] = [];
   mappingData.forEach((email) => {
+
+    // Change the case insensitive
     mappedEmails.push({
-      existing: email['Existing Email'],
-      sso: email['SSO Email'],
-      workspaceOwner: email['Workspace Owner Email'],
+      existing: email['Existing Email'].toLowerCase(),
+      sso: email['SSO Email'].toLowerCase(),
+      workspaceOwner: email['Workspace Owner Email'].toLowerCase(),
     });
   });
 
-  const existingEmails = mappedEmails.map((data) => data.existing);
-  const ssoEmails = mappedEmails.map((data) => data.sso);
+  const allEmails = [];
+  mappedEmails.map(email => {
+    allEmails.push(email.existing);
+    allEmails.push(email.sso);
+  });
 
-  if (existingEmails.length === 0 || ssoEmails.length === 0) {
+  if (allEmails.length === 0) {
     throw new Error(
-      `CSV file is empty. Please provide atleast one user existing email address and sso email address to migrate.`,
+      `CSV file is empty. Please provide atleast one user existing email address to migrate.`,
     );
   }
 
   // Find out existing email duplicates
-  const duplicateExistingEmails = toFindDuplicateElements(existingEmails);
-  if (duplicateExistingEmails.length > 0) {
+  const duplicateEmails = toFindDuplicateElements(allEmails);
+  if (duplicateEmails.length > 0) {
     throw new Error(
-      `CSV file contains the duplicate existing email(s) - ${duplicateExistingEmails.concat(
-        '\n',
-      )}`,
-    );
-  }
-
-  // Find out sso email duplicates
-  const duplicateSsoEmails = toFindDuplicateElements(ssoEmails);
-  if (duplicateSsoEmails.length > 0) {
-    throw new Error(
-      `CSV file contains the duplicate sso email(s) - ${duplicateSsoEmails.concat(
+      `CSV file contains the duplicate email(s) - ${duplicateEmails.concat(
         '\n',
       )}`,
     );
@@ -68,36 +57,6 @@ export const validateEmail = (email: string): any => {
   if (!validator.isEmail(email)) {
     const message = `Invalid email format `;
     return { error: message };
-  }
-};
-
-const getOrganizationMembers = async (
-  organizationId: string,
-  cursor?: string,
-): Promise<any> => {
-  const userAttributes = ['id', 'email'];
-  const roleAttributes = ['id', 'type'];
-  const pageSize = 100;
-  const getOrgMembers = await organizationService.getOrganizationMembers(
-    organizationId,
-    userAttributes,
-    roleAttributes,
-    pageSize,
-    cursor,
-  );
-
-  const orgMembers =
-    (getOrgMembers.data as any)?.organization?.members?.results || [];
-  const nextCursor = getOrgMembers.data?.organization?.members?.next;
-
-  if (orgMembers && orgMembers.length > 0) {
-    if (valueExists(nextCursor)) {
-      return orgMembers.concat(
-        await getOrganizationMembers(organizationId, nextCursor),
-      );
-    } else {
-      return orgMembers;
-    }
   }
 };
 
@@ -121,9 +80,9 @@ export class EmailMigrationService extends FetchService {
     return false;
   }
 
-  async validateSessionUserUserRole(
+  async validateSessionUserRole(
     userEmail: string,
-    roleType: ApplicationRole,
+    roleType: Roles,
   ): Promise<any> {
     const { data, errors: userExistenceError } =
       await userService.getUserFromEmail(userEmail, [
@@ -157,14 +116,11 @@ export class EmailMigrationService extends FetchService {
     }
     const orgOwner = (data as any)?.organization || {};
 
-    let orgOwnerEmail;
     if (orgOwner?.members?.results && orgOwner?.members?.results.length > 0) {
-      orgOwnerEmail = orgOwner.members.results[0].member.email;
+      const orgOwnerEmail = orgOwner.members.results[0].member.email;
+       // If the owner email is not provided for migration, throw error and Do Not Proceed further
+     return existingEmails.includes(orgOwnerEmail);
     }
-    // If the owner email is not provided for migration, throw error and Do Not Proceed further
-    if (!orgOwnerEmail || !existingEmails.includes(orgOwnerEmail)) {
-      return false;
-    }
-    return true;
+    return false;
   }
 }

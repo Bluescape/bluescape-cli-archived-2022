@@ -123,7 +123,7 @@ export const handler: Handler = async (argv) => {
   const failedEmailMigrationWithReasons = [];
 
   const writeFailedEmailMigrationsToCsv = await writeJsonToCsv(
-    path.join(__dirname, `../../../logs/email_migration_logs_${Date.now()}`),
+    path.join(__dirname, `../../../logs/email_migration_${Date.now()}`),
     [
       {
         id: 'existingEmail',

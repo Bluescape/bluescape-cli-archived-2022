@@ -125,7 +125,7 @@ export const handler: Handler = async (argv) => {
 
   // write errors and logs to a csv file
   const writeFailedEmailMigrationsToCsv = createWriteStream(
-    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}`),
+    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
   );
 
   writeFailedEmailMigrationsToCsv.write(

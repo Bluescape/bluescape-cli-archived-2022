@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { createWriteStream } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -11,7 +12,7 @@ import {
   csvFileDataValidation,
   validateEmail,
 } from '../../services/email-migrate.service';
-import { getJsonFromCSV, writeJsonToCsv } from '../../utils/csv';
+import { getJsonFromCSV } from '../../utils/csv';
 import { valueExists } from '../../utils/validators';
 import { Builder, Handler } from '../user/get.types';
 import { ApplicationRole, Roles } from '../user/role.types';
@@ -120,26 +121,16 @@ export const handler: Handler = async (argv) => {
 
   const totalUsersCount = mappingData.length;
 
-  const provideEmailMigrationDryRunReport = await writeJsonToCsv(
-    path.join(__dirname, `../../../dry-run/email_migration_${Date.now()}`),
-    [
-      {
-        id: 'existingEmail',
-        title: 'Existing Email',
-      },
-      {
-        id: 'ssoEmail',
-        title: 'SSO Email',
-      },
-      {
-        id: 'workspaceOwnerEmail',
-        title: 'Workspace Owner Email',
-      },
-      {
-        id: 'message',
-        title: 'Message',
-      },
-    ],
+  // create a csv file report for email migrations
+  const provideEmailMigrationDryRunReport = createWriteStream(
+    path.resolve(
+      __dirname,
+      `../../../dry-run/email_migration_${Date.now()}.csv`,
+    ),
+  );
+
+  provideEmailMigrationDryRunReport.write(
+    'Existing Email,SSO Email,Workspace Owner Email,Message',
   );
 
   const failedEmailMigrationWithReasons = [];
@@ -176,14 +167,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: validExistingEmail?.error,
       });
-      provideEmailMigrationDryRunReport.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message: validExistingEmail?.error,
-        },
-      ]);
+      provideEmailMigrationDryRunReport.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
+      );
       handleErrors(validExistingEmail.error, progressing, spinner);
       continue;
     }
@@ -203,14 +189,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: getOrgMember?.error,
       });
-      provideEmailMigrationDryRunReport.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message: getOrgMember?.error,
-        },
-      ]);
+      provideEmailMigrationDryRunReport.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getOrgMember?.error}`,
+      );
       handleErrors(
         `Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
         progressing,
@@ -230,14 +211,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message,
       });
-      provideEmailMigrationDryRunReport.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message,
-        },
-      ]);
+      provideEmailMigrationDryRunReport.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
+      );
       handleErrors(`Failed with ${message}`, progressing, spinner);
       continue;
     }
@@ -266,14 +242,9 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message: validSsoEmail?.error,
         });
-        provideEmailMigrationDryRunReport.writeRecords([
-          {
-            existingEmail,
-            ssoEmail,
-            workspaceOwnerEmail,
-            message: validSsoEmail?.error,
-          },
-        ]);
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validSsoEmail?.error}`,
+        );
         handleErrors(
           `SSO Email - ${validSsoEmail?.error}`,
           progressing,
@@ -293,14 +264,9 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message,
         });
-        provideEmailMigrationDryRunReport.writeRecords([
-          {
-            existingEmail,
-            ssoEmail,
-            workspaceOwnerEmail,
-            message,
-          },
-        ]);
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
+        );
         handleErrors(`SSO ${message}`, progressing, spinner);
       }
 
@@ -395,12 +361,9 @@ export const handler: Handler = async (argv) => {
        * If the Workspace Owner Email is provided, move it to that user, otherwise move this worksapce to Organization Owner
        */
     }
-    provideEmailMigrationDryRunReport.writeRecords([
-      {
-        existingEmail,
-        ssoEmail,
-        workspaceOwnerEmail,
-      },
-    ]);
+
+    provideEmailMigrationDryRunReport.write(
+      `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},`,
+    );
   }
 };

@@ -1,4 +1,5 @@
 import chalk from 'chalk';
+import { createWriteStream } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -11,7 +12,7 @@ import {
   csvFileDataValidation,
   validateEmail,
 } from '../../services/email-migrate.service';
-import { getJsonFromCSV, writeJsonToCsv } from '../../utils/csv';
+import { getJsonFromCSV } from '../../utils/csv';
 import { valueExists } from '../../utils/validators';
 import { Builder, Handler } from '../user/get.types';
 import { ApplicationRole, Roles } from '../user/role.types';
@@ -122,26 +123,13 @@ export const handler: Handler = async (argv) => {
 
   const failedEmailMigrationWithReasons = [];
 
-  const writeFailedEmailMigrationsToCsv = await writeJsonToCsv(
-    path.join(__dirname, `../../../logs/email_migration_${Date.now()}`),
-    [
-      {
-        id: 'existingEmail',
-        title: 'Existing Email',
-      },
-      {
-        id: 'ssoEmail',
-        title: 'SSO Email',
-      },
-      {
-        id: 'workspaceOwnerEmail',
-        title: 'Workspace Owner Email',
-      },
-      {
-        id: 'message',
-        title: 'Message',
-      },
-    ],
+  // write errors and logs to a csv file
+  const writeFailedEmailMigrationsToCsv = createWriteStream(
+    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}`),
+  );
+
+  writeFailedEmailMigrationsToCsv.write(
+    'Existing Email,SSO Email,Workspace Owner Email,Message',
   );
 
   for await (const [index, mappedEmail] of mappedEmails.entries()) {
@@ -176,14 +164,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: validExistingEmail?.error,
       });
-      await writeFailedEmailMigrationsToCsv.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message: validExistingEmail?.error,
-        },
-      ]);
+      await writeFailedEmailMigrationsToCsv.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
+      );
       handleErrors(validExistingEmail.error, progressing, spinner);
       continue;
     }
@@ -203,14 +186,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: getOrgMember?.error,
       });
-      await writeFailedEmailMigrationsToCsv.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message: getOrgMember?.error,
-        },
-      ]);
+      await writeFailedEmailMigrationsToCsv.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getOrgMember?.error}`,
+      );
       handleErrors(
         `Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
         progressing,
@@ -230,14 +208,9 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message,
       });
-      await writeFailedEmailMigrationsToCsv.writeRecords([
-        {
-          existingEmail,
-          ssoEmail,
-          workspaceOwnerEmail,
-          message,
-        },
-      ]);
+      await writeFailedEmailMigrationsToCsv.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
+      );
       handleErrors(`Failed with ${message}`, progressing, spinner);
       continue;
     }
@@ -266,14 +239,9 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message: validSsoEmail?.error,
         });
-        await writeFailedEmailMigrationsToCsv.writeRecords([
-          {
-            existingEmail,
-            ssoEmail,
-            workspaceOwnerEmail,
-            message: validSsoEmail?.error,
-          },
-        ]);
+        await writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validSsoEmail?.error}`,
+        );
         handleErrors(
           `SSO Email - ${validSsoEmail?.error}`,
           progressing,
@@ -293,14 +261,9 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message,
         });
-        await writeFailedEmailMigrationsToCsv.writeRecords([
-          {
-            existingEmail,
-            ssoEmail,
-            workspaceOwnerEmail,
-            message,
-          },
-        ]);
+        await writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
+        );
         handleErrors(`SSO ${message}`, progressing, spinner);
       }
 

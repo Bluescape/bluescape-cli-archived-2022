@@ -363,7 +363,7 @@ export const handler: Handler = async (argv) => {
     }
 
     provideEmailMigrationDryRunReport.write(
-      `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},`,
+      `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},sucessfully migrated`,
     );
   }
 };

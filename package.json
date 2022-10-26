@@ -10,11 +10,10 @@
     "bs": "npm run build && node ./build/cli.js",
     "package:linux": "pkg . --no-bytecode --targets node14-linux-x64 --output bin/linux/bluescape",
     "package:macos": "pkg . --no-bytecode --targets node14-macos-x64 --output bin/macos/bluescape",
-    "format": "prettier --write",
-    "format:check": "prettier --loglevel warn --check \"**/*.{ts,js,json,yaml}\"",
-      "lint": "eslint -c .eslintrc.js \"{src,test}/**/*.ts\" --fix",
-    "lint:check": "eslint \"src/**/*.ts\"",
-    "test": "npm run test "
+    "test": "npm run test ",
+    "trunk": "trunk",
+    "format": "trunk fmt",
+    "lint": "trunk check"
   },
   "main": "./build/cli.js",
   "bin": {
@@ -54,6 +53,7 @@
     "@types/yargs": "17.0.10",
     "@typescript-eslint/eslint-plugin": "5.25.0",
     "@typescript-eslint/parser": "5.25.0",
+    "@trunkio/launcher": "1.2.2",
     "babel-eslint": "10.1.0",
     "eslint": "8.15.0",
     "eslint-config-prettier": "8.5.0",

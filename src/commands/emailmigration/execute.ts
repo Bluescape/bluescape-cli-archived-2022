@@ -164,7 +164,7 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: validExistingEmail?.error,
       });
-      await writeFailedEmailMigrationsToCsv.write(
+      writeFailedEmailMigrationsToCsv.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
       );
       handleErrors(validExistingEmail.error, progressing, spinner);
@@ -186,7 +186,7 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message: getOrgMember?.error,
       });
-      await writeFailedEmailMigrationsToCsv.write(
+      writeFailedEmailMigrationsToCsv.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getOrgMember?.error}`,
       );
       handleErrors(
@@ -208,7 +208,7 @@ export const handler: Handler = async (argv) => {
         workspaceOwnerEmail,
         message,
       });
-      await writeFailedEmailMigrationsToCsv.write(
+      writeFailedEmailMigrationsToCsv.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
       );
       handleErrors(`Failed with ${message}`, progressing, spinner);
@@ -221,6 +221,9 @@ export const handler: Handler = async (argv) => {
       );
 
     if (getSourceMemberOrgs && getSourceMemberOrgs?.error) {
+      writeFailedEmailMigrationsToCsv.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getSourceMemberOrgs?.error}`,
+      );
       handleErrors(getSourceMemberOrgs?.error, progressing, spinner);
       continue;
     }
@@ -239,7 +242,7 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message: validSsoEmail?.error,
         });
-        await writeFailedEmailMigrationsToCsv.write(
+        writeFailedEmailMigrationsToCsv.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validSsoEmail?.error}`,
         );
         handleErrors(
@@ -261,7 +264,7 @@ export const handler: Handler = async (argv) => {
           workspaceOwnerEmail,
           message,
         });
-        await writeFailedEmailMigrationsToCsv.write(
+        writeFailedEmailMigrationsToCsv.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
         );
         handleErrors(`SSO ${message}`, progressing, spinner);
@@ -277,6 +280,9 @@ export const handler: Handler = async (argv) => {
           );
 
         if (getTargetMemberOrgs && getTargetMemberOrgs?.error) {
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getTargetMemberOrgs?.error}`,
+          );
           handleErrors(
             `Failed to fetch SSO user organizations ${getTargetMemberOrgs.error}`,
             progressing,
@@ -309,6 +315,9 @@ export const handler: Handler = async (argv) => {
             ['id', 'email'],
           );
           if (updateUserEmail.error) {
+            writeFailedEmailMigrationsToCsv.write(
+              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateUserEmail.error}`,
+            );
             handleErrors(
               `Failed to update user email ${updateUserEmail.error}`,
               progressing,
@@ -325,6 +334,9 @@ export const handler: Handler = async (argv) => {
           ssoEmail,
         );
         if (userCreation.error) {
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${userCreation.error}`,
+          );
           handleErrors(
             `Failed to create the user ${ssoEmail} ${userCreation.error}`,
             progressing,
@@ -341,6 +353,9 @@ export const handler: Handler = async (argv) => {
           organization?.defaultOrganizationUserRole?.id,
         );
         if (orgMember && orgMember?.error) {
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${orgMember?.error}`,
+          );
           handleErrors(
             `Failed to add the new user ${newSSOUser.id} to organization ${orgMember.error}`,
             progressing,

@@ -5,6 +5,9 @@ import { Email } from '../types';
 import { valueExists } from '../utils/validators';
 import { FetchService } from './fetch.service';
 
+const userAttributes = ['id', 'email'];
+const roleAttributes = ['id', 'type'];
+
 export interface MappedEmailInformation {
   existing: Email;
   sso?: Email;
@@ -75,8 +78,6 @@ const getOrganizationMembers = async (
   organizationId: string,
   cursor?: string,
 ): Promise<any> => {
-  const userAttributes = ['id', 'email'];
-  const roleAttributes = ['id', 'type'];
   const pageSize = 100;
   const getOrgMembers = await organizationService.getOrganizationMembers(
     organizationId,
@@ -107,11 +108,8 @@ export class EmailMigrationService extends FetchService {
   }
 
   async checkIfUserBelongsToManyOrganizations(userId: string): Promise<any> {
-    const {
-      data,
-      error,
-    } = await userService.getUserOrganizations(userId, 100);
-    
+    const { data, error } = await userService.getUserOrganizations(userId, 100);
+
     if (error) {
       return { error: `Failed to fetch user organizations ${error}` };
     }
@@ -174,22 +172,22 @@ export class EmailMigrationService extends FetchService {
   ): Promise<any> {
     const userAttributes = ['id', 'email'];
     const roleAttributes = ['id', 'type'];
-    const { data, errors: memberExistenceError } = await organizationService.getOrganizationMemberByEmail(
-      organizationId,
-      email,
-      userAttributes,
-      roleAttributes,
-    );
+    const { data, errors: memberExistenceError } =
+      await organizationService.getOrganizationMemberByEmail(
+        organizationId,
+        email,
+        userAttributes,
+        roleAttributes,
+      );
 
     if (memberExistenceError) {
       const [{ message }] = memberExistenceError as any;
       return { error: message };
     }
-    const orgMember =
-    (data as any)?.organization?.members?.results || [];
+    const orgMember = (data as any)?.organization?.members?.results || [];
 
     let member;
-    
+
     if (orgMember.length > 0) {
       member = {
         id: orgMember[0].member.id,
@@ -208,32 +206,34 @@ export class EmailMigrationService extends FetchService {
     userId: string,
     organizationRoleId: string,
   ): Promise<any> {
-    const userAttributes = ['id', 'email'];
-    const roleAttributes = ['id', 'type'];
-    const { data, errors: existenceError } = await organizationService.addMemberToOrganization(
-      organizationId,
-      userId,
-      organizationRoleId,
-      userAttributes,
-      roleAttributes,
-    );
+    const { data, errors: existenceError } =
+      await organizationService.addMemberToOrganization(
+        organizationId,
+        userId,
+        organizationRoleId,
+        userAttributes,
+        roleAttributes,
+      );
 
     if (existenceError) {
       const [{ message }] = existenceError as any;
       return { error: message };
     }
-    const orgMember =
-    (data as any)?.addMember || {};
+    const orgMember = (data as any)?.addMember || {};
 
     let member;
-    
+
     if (valueExists(orgMember)) {
+      const {
+        member: { id, email },
+        organizationRole: { id: orgRoleId, type },
+      } = orgMember;
       member = {
-        id: orgMember.member.id,
-        email: orgMember.member.email,
+        id,
+        email,
         role: {
-          id: orgMember.organizationRole.id,
-          type: orgMember.organizationRole.type,
+          id: orgRoleId,
+          type,
         },
       };
     }

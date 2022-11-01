@@ -13,7 +13,7 @@ import {
 import { getJsonFromCSV } from '../../utils/csv';
 import { valueExists } from '../../utils/validators';
 import { Builder, Handler } from '../user/get.types';
-import { ApplicationRole, Roles } from '../user/role.types';
+import { Roles } from '../user/role.types';
 import { askOrganizationId } from './ask-migration-information';
 
 export const command = 'execute';
@@ -51,9 +51,9 @@ export const handler: Handler = async (argv) => {
     return;
   }
 
-  const sessionUser = await emailMigrationService.validateSessionUserUserRole(
+  const sessionUser = await emailMigrationService.validateSessionUserRole(
     email,
-    ApplicationRole.Admin,
+    Roles.Admin,
   );
   if (sessionUser && sessionUser.error) {
     spinner.fail(chalk.red(`Session ${sessionUser.error}`));
@@ -121,12 +121,7 @@ export const handler: Handler = async (argv) => {
   const failedEmailMigrationWithReasons = [];
 
   for await (const [index, mappedEmail] of mappedEmails.entries()) {
-    const { existing, sso, workspaceOwner } = mappedEmail;
-
-    // Change the case insensitive
-    const existingEmail = existing.toLowerCase();
-    const ssoEmail = sso.toLowerCase();
-    const workspaceOwnerEmail = workspaceOwner.toLowerCase();
+    const { existing: existingEmail, sso: ssoEmail, workspaceOwner: workspaceOwnerEmail } = mappedEmail;
 
     /**
      * Source Member - Existing Member

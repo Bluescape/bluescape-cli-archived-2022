@@ -28,7 +28,7 @@ export const csvFileDataValidation = (
     mappedEmails.push({
       existing: email['Existing Email'].toLowerCase(),
       sso: email['SSO Email'].toLowerCase(),
-      workspaceOwner: email['Workspace Owner Email'].toLowerCase(),
+      workspaceOwner: email['Workspace Reassignment Email'].toLowerCase(),
     });
   });
 
@@ -196,5 +196,27 @@ export class EmailMigrationService extends FetchService {
       };
     }
     return member;
+  }
+
+  async getOrganizationVisitorRoleId(
+    organizationId: string
+  ): Promise<any> {
+    const { data, errors: existenceError } =
+      await organizationService.getOrganizationVisitorRole(
+        organizationId,
+        roleAttributes,
+      );
+
+    if (existenceError) {
+      const [{ message }] = existenceError as any;
+      return { error: message };
+    }
+
+    const visitorRole = (data as any)?.roles?.results || [];
+
+    if (visitorRole.length > 0) {
+      return visitorRole[0].id
+    }
+    return null;
   }
 }

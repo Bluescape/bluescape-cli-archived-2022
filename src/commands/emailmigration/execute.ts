@@ -176,7 +176,7 @@ export const handler: Handler = async (argv) => {
     if (getOrgMember && getOrgMember?.error) {
       failedEmailMigrationWithReasons++;
       writeFailedEmailMigrationsToCsv.write(
-        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getOrgMember?.error}`,
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
       );
       handleErrors(
         `Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
@@ -193,7 +193,7 @@ export const handler: Handler = async (argv) => {
       const message = `${existingEmail} is not a member of the organization ${organizationId}`;
       failedEmailMigrationWithReasons++;
       writeFailedEmailMigrationsToCsv.write(
-        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed with ${message}`,
       );
       handleErrors(`Failed with ${message}`, progressing, spinner);
       continue;
@@ -205,6 +205,7 @@ export const handler: Handler = async (argv) => {
       );
 
     if (getSourceMemberOrgs && getSourceMemberOrgs?.error) {
+      failedEmailMigrationWithReasons++;
       writeFailedEmailMigrationsToCsv.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getSourceMemberOrgs?.error}`,
       );
@@ -222,7 +223,7 @@ export const handler: Handler = async (argv) => {
       if (validSsoEmail?.error) {
         failedEmailMigrationWithReasons++;
         writeFailedEmailMigrationsToCsv.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validSsoEmail?.error}`,
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},SSO Email - ${validSsoEmail?.error}`,
         );
         handleErrors(
           `SSO Email - ${validSsoEmail?.error}`,
@@ -237,10 +238,6 @@ export const handler: Handler = async (argv) => {
 
       if (ssoUserExistenceError) {
         const [{ message }] = ssoUserExistenceError as any;
-        failedEmailMigrationWithReasons++;
-        writeFailedEmailMigrationsToCsv.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${message}`,
-        );
         handleErrors(`SSO ${message}`, progressing, spinner);
       }
 
@@ -256,7 +253,7 @@ export const handler: Handler = async (argv) => {
         if (getTargetMemberOrgs && getTargetMemberOrgs?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getTargetMemberOrgs?.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed to fetch SSO user organizations ${getTargetMemberOrgs?.error}`,
           );
           handleErrors(
             `Failed to fetch SSO user organizations ${getTargetMemberOrgs.error}`,
@@ -290,6 +287,10 @@ export const handler: Handler = async (argv) => {
                 organization?.defaultOrganizationUserRole?.id,
               );
             if (updateMemberRole?.error) {
+              failedEmailMigrationWithReasons++;
+              writeFailedEmailMigrationsToCsv.write(
+                `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
+              );
               handleErrors(updateMemberRole.error, progressing, spinner);
               continue;
             }
@@ -307,7 +308,7 @@ export const handler: Handler = async (argv) => {
           if (updateUserEmail.error) {
             failedEmailMigrationWithReasons++;
             writeFailedEmailMigrationsToCsv.write(
-              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateUserEmail.error}`,
+              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed to update user email ${updateUserEmail.error}`,
             );
             handleErrors(
               `Failed to update user email ${updateUserEmail.error}`,
@@ -339,6 +340,10 @@ export const handler: Handler = async (argv) => {
        */
       // Check if this user has owned workspaces
       if (!organization?.canHaveGuests) {
+        failedEmailMigrationWithReasons++;
+        writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`,
+        );
         handleErrors(
           `Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`,
           progressing,
@@ -347,6 +352,10 @@ export const handler: Handler = async (argv) => {
         continue;
       }
       if (sourceMember.role.type === Roles.Visitor) {
+        failedEmailMigrationWithReasons++;
+        writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} is already a ${Roles.Visitor} in the organization`,
+        );
         handleErrors(
           `${existingEmail} is already a ${Roles.Visitor} in the organization`,
           progressing,
@@ -360,6 +369,9 @@ export const handler: Handler = async (argv) => {
         const validExistingEmail = validateEmail(workspaceOwnerEmail);
         if (validExistingEmail?.error) {
           failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+          );
           handleErrors(validExistingEmail.error, progressing, spinner);
           continue;
         }
@@ -374,6 +386,9 @@ export const handler: Handler = async (argv) => {
 
         if (getOrgMember && getOrgMember?.error) {
           failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
+          );
           handleErrors(
             `Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
             progressing,
@@ -386,6 +401,9 @@ export const handler: Handler = async (argv) => {
           newOwner = getOrgMember;
         } else {
           failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Workspace Reassignment Email - ${workspaceOwnerEmail} is not a member of the organization`,
+          );
           handleErrors(
             `Workspace Reassignment Email - ${workspaceOwnerEmail} is not a member of the organization`,
             progressing,
@@ -402,6 +420,9 @@ export const handler: Handler = async (argv) => {
 
         if (visitorRole?.error) {
           failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+          );
           handleErrors(validExistingEmail.error, progressing, spinner);
           continue;
         }
@@ -421,6 +442,10 @@ export const handler: Handler = async (argv) => {
                   visitorRole,
                 );
           if (updateMemberRole?.error) {
+            failedEmailMigrationWithReasons++;
+            writeFailedEmailMigrationsToCsv.write(
+              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
+            );
             handleErrors(updateMemberRole.error, progressing, spinner);
             continue;
           }

@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createWriteStream } from 'fs';
+import { createWriteStream, mkdirSync } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -124,6 +124,7 @@ export const handler: Handler = async (argv) => {
   let failedEmailMigrationWithReasons = 0;
 
   // write errors and logs to a csv file
+  mkdirSync(path.join(__dirname, '../../../logs'));
   const writeFailedEmailMigrationsToCsv = createWriteStream(
     path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
   );
@@ -449,7 +450,9 @@ export const handler: Handler = async (argv) => {
             handleErrors(updateMemberRole.error, progressing, spinner);
             continue;
           }
-          const reassignedOwner = workspaceOwnerEmail ? workspaceOwnerEmail : 'Organization Owner';
+          const reassignedOwner = workspaceOwnerEmail
+            ? workspaceOwnerEmail
+            : 'Organization Owner';
           spinner.info(
             chalk.gray(
               `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,

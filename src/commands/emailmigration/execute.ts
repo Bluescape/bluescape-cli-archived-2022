@@ -321,7 +321,7 @@ export const handler: Handler = async (argv) => {
               continue;
             }
             spinner.info(
-              chalk.gray(
+              chalk.green(
                 `${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`,
               ),
             );
@@ -340,6 +340,12 @@ export const handler: Handler = async (argv) => {
               `Failed to update user email ${updateUserEmail.error}`,
               progressing,
               spinner,
+            );
+          } else {
+            spinner.info(
+              chalk.green(
+                `${progressing} - Successfully updated ${existingEmail} to ${ssoEmail}\n`,
+              ),
             );
           }
           continue;
@@ -482,7 +488,7 @@ export const handler: Handler = async (argv) => {
             ? workspaceOwnerEmail
             : 'Organization Owner';
           spinner.info(
-            chalk.gray(
+            chalk.green(
               `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
             ),
           );

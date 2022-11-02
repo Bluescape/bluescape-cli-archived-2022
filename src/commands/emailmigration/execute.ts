@@ -254,13 +254,17 @@ export const handler: Handler = async (argv) => {
               await organizationService.updateOrganizationMemberRole(
                 sourceMember.id,
                 organizationId,
-                organization?.defaultOrganizationUserRole?.id
+                organization?.defaultOrganizationUserRole?.id,
               );
-            if(updateMemberRole?.error) {
+            if (updateMemberRole?.error) {
               handleErrors(updateMemberRole.error, progressing, spinner);
               continue;
             }
-            spinner.info(chalk.gray(`${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`));
+            spinner.info(
+              chalk.gray(
+                `${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`,
+              ),
+            );
           }
           const updateUserEmail = await userService.updateUserEmail(
             sourceMember.id,
@@ -287,7 +291,7 @@ export const handler: Handler = async (argv) => {
         );
         // If the ExistingMember belongs to many organization
         // Split the User Accounts
-        
+
         // Migrate all the resources to this new user from the Existing user
       }
     } else {
@@ -297,13 +301,16 @@ export const handler: Handler = async (argv) => {
        * If the Workspace Owner Email is provided, move it to that user, otherwise move this worksapce to Organization Owner
        */
       // Check if this user has owned workspaces
-
+      if (!organization?.canHaveGuests) {
+        handleErrors(
+          `Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`,
+          progressing,
+          spinner,
+        );
+        continue;
+      }
+      let newOwner;
       if (workspaceOwnerEmail) {
-        if(!organization?.canHaveGuests) {
-          handleErrors(`Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`, progressing, spinner);
-          continue;
-        }
-
         // Should be a valid email
         const validExistingEmail = validateEmail(workspaceOwnerEmail);
         if (validExistingEmail?.error) {
@@ -311,7 +318,7 @@ export const handler: Handler = async (argv) => {
           handleErrors(validExistingEmail.error, progressing, spinner);
           continue;
         }
-        let newOwner;
+
         // Get owner email - is a member in the organization
         // If not available skip, failed notification and continue;
         const getOrgMember =
@@ -331,37 +338,52 @@ export const handler: Handler = async (argv) => {
         }
         if (valueExists(getOrgMember) && getOrgMember.id) {
           newOwner = getOrgMember;
-        }
-        if (newOwner && newOwner?.id) {
-          // Get Visitor Role Id
-          const visitorRole =
-            await emailMigrationService.getOrganizationVisitorRoleId(
-              organizationId,
-            );
-          
-          if (visitorRole?.error) {
-            failedEmailMigrationWithReasons++;
-            handleErrors(validExistingEmail.error, progressing, spinner);
-            continue;
-          }
-          if (visitorRole) {
-            const updateMemberRole =
-              await organizationService.updateOrganizationMemberRole(
-                sourceMember.id,
-                organizationId,
-                visitorRole,
-                newOwner.id,
-              );
-            if(updateMemberRole?.error) {
-              handleErrors(updateMemberRole.error, progressing, spinner);
-              continue;
-            }
-            spinner.info(chalk.gray(`${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${workspaceOwnerEmail}\n`));
-          }
         } else {
           failedEmailMigrationWithReasons++;
-          handleErrors(`Workspace Reassignment Email - ${workspaceOwnerEmail} is not a member of the organization`, progressing, spinner);
+          handleErrors(
+            `Workspace Reassignment Email - ${workspaceOwnerEmail} is not a member of the organization`,
+            progressing,
+            spinner,
+          );
           continue;
+        }
+
+        // Get Visitor Role Id
+        const visitorRole =
+          await emailMigrationService.getOrganizationVisitorRoleId(
+            organizationId,
+          );
+
+        if (visitorRole?.error) {
+          failedEmailMigrationWithReasons++;
+          handleErrors(validExistingEmail.error, progressing, spinner);
+          continue;
+        }
+
+        if (visitorRole) {
+          const updateMemberRole =
+            newOwner && newOwner?.id
+              ? await organizationService.updateOrganizationMemberRole(
+                  sourceMember.id,
+                  organizationId,
+                  visitorRole,
+                  newOwner.id,
+                )
+              : await organizationService.updateOrganizationMemberRole(
+                  sourceMember.id,
+                  organizationId,
+                  visitorRole,
+                );
+          if (updateMemberRole?.error) {
+            handleErrors(updateMemberRole.error, progressing, spinner);
+            continue;
+          }
+          const reassignedOwner = workspaceOwnerEmail ? workspaceOwnerEmail : 'Organization Owner';
+          spinner.info(
+            chalk.gray(
+              `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
+            ),
+          );
         }
       }
     }
@@ -386,7 +408,9 @@ export const handler: Handler = async (argv) => {
     );
   } else {
     spinner.succeed(
-      chalk.green(`Passed: ${totalUsersCount - failedEmailMigrationWithReasons}\n`),
+      chalk.green(
+        `Passed: ${totalUsersCount - failedEmailMigrationWithReasons}\n`,
+      ),
     );
     spinner.fail(chalk.red(`Failed:  ${failedEmailMigrationWithReasons}\n`));
   }

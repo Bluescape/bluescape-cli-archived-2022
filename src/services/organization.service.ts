@@ -63,40 +63,6 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
-  async getOrganizationMembers(
-    orgnaizationId: string,
-    userAttributes: string[],
-    roleAttributes: string[],
-    pageSize: number,
-    cursor?: string,
-  ): Promise<any> {
-    let options: any = `pagination: { pageSize: ${pageSize} } `;
-    if (cursor) {
-      options = `pagination: { pageSize: ${pageSize} }, cursor: "${cursor}"`;
-    }
-    const query = `{organization(organizationId:"${orgnaizationId}"){
-      members(${options}) {
-        totalItems
-        prev
-        next
-        results {
-          member {
-            __typename 
-            ... on User {
-              ${userAttributes.concat('\n')}
-            }
-          }
-          organizationRole {
-            ${roleAttributes.concat('\n')}
-          }
-        }
-      }
-    }}`;
-    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
-    const { data } = await this.request(FetchRequestType.Post, url, { query });
-    return data;
-  }
-
   async addMemberToOrganization(
     orgnaizationId: string,
     userId: string,
@@ -120,6 +86,53 @@ export class OrganizationService extends FetchService {
       }
     }`;
 
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+
+  async updateOrganizationMemberRole(memberId: string,orgnaizationId: string, organizationRoleId: string, newWorkspaceOwnerId?: string): Promise<any> {
+    let path;
+    path = `/organizations/${orgnaizationId}/members/${memberId}/role`;
+    if (newWorkspaceOwnerId) {
+      path = `/organizations/${orgnaizationId}/members/${memberId}/role?newWorkspaceOwnerId=${newWorkspaceOwnerId}`;
+    }
+
+    const url = this.getUrlForService(Service.ISAM, path);
+    const payload = {
+      organizationRoleId
+    }
+    
+    let data;
+    try {
+      data = await this.request(FetchRequestType.Patch, url, {
+        ...payload,
+      });
+      console.log('\n\n data ==>', data);
+      return data;
+    } catch (error) {
+      return { error };
+    }
+  }
+
+  async getOrganizationVisitorRole(
+    orgnaizationId: string,
+    attributes: string[],
+  ): Promise<any> {
+    const query = `{roles(
+      filtering: {
+        and: [
+          { organizationId: { eq: "${orgnaizationId}" } }
+          { resourceType: { eq: Organization } }
+          { type: { eq: Visitor } }
+          { level: { eq: Primary } }
+          { isCustom: { eq: false } }
+        ]
+      }){
+      results {
+        ${attributes.concat('\n')}
+      }
+    }}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;

@@ -108,7 +108,6 @@ export class OrganizationService extends FetchService {
       data = await this.request(FetchRequestType.Patch, url, {
         ...payload,
       });
-      console.log('\n\n data ==>', data);
       return data;
     } catch (error) {
       return { error };

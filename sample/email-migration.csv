@@ -1,6 +1,6 @@
 Existing Email,SSO Email,Workspace Reassignment Email
-instance1@bluescape.com,instance126@ssodomain.com,
-user@mailinator.com,,admin@bluescape.com
-user+1@bluescape.com,user3@ssodomain,
-user+12@bluescape.com,,
-user+23@bluescape.com,,
+instance@bluescape.com,instance@ssodomain.com,
+admin@bluescape.com,admin@ssodomain.com,
+thanos@mailinator.com,,
+user@mailinator.com,,admin@ssodomain.com
+user+1@bluescape.com,user@mailinator.com,

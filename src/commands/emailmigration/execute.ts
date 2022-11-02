@@ -241,11 +241,7 @@ export const handler: Handler = async (argv) => {
 
       if (ssoUserExistenceError) {
         const [{ message }] = ssoUserExistenceError as any;
-        spinner.info(
-          chalk.gray(
-            `${progressing} - SSO ${message}.\n`,
-          ),
-        );
+        spinner.info(chalk.gray(`${progressing} - SSO ${message}.\n`));
       }
 
       // If SSO user exists check if it belongs to one org/multiple orgs
@@ -353,7 +349,7 @@ export const handler: Handler = async (argv) => {
         /**
          * For now DO NOT do any action when the ExistingMember belongs to many organization
          */
-         writeFailedEmailMigrationsToCsv.write(
+        writeFailedEmailMigrationsToCsv.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
         );
         failedEmailMigrationWithReasons++;
@@ -446,53 +442,53 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
+      }
 
-        // Get Visitor Role Id
-        const visitorRole =
-          await emailMigrationService.getOrganizationVisitorRoleId(
-            organizationId,
-          );
+      // Get Visitor Role Id
+      const visitorRole =
+        await emailMigrationService.getOrganizationVisitorRoleId(
+          organizationId,
+        );
 
-        if (visitorRole?.error) {
+      if (visitorRole?.error) {
+        failedEmailMigrationWithReasons++;
+        writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+        );
+        handleErrors(visitorRole.error, progressing, spinner);
+        continue;
+      }
+
+      if (visitorRole) {
+        const updateMemberRole =
+          newOwner && newOwner?.id
+            ? await organizationService.updateOrganizationMemberRole(
+                sourceMember.id,
+                organizationId,
+                visitorRole,
+                newOwner.id,
+              )
+            : await organizationService.updateOrganizationMemberRole(
+                sourceMember.id,
+                organizationId,
+                visitorRole,
+              );
+        if (updateMemberRole?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
           );
-          handleErrors(visitorRole.error, progressing, spinner);
+          handleErrors(updateMemberRole.error, progressing, spinner);
           continue;
         }
-
-        if (visitorRole) {
-          const updateMemberRole =
-            newOwner && newOwner?.id
-              ? await organizationService.updateOrganizationMemberRole(
-                  sourceMember.id,
-                  organizationId,
-                  visitorRole,
-                  newOwner.id,
-                )
-              : await organizationService.updateOrganizationMemberRole(
-                  sourceMember.id,
-                  organizationId,
-                  visitorRole,
-                );
-          if (updateMemberRole?.error) {
-            failedEmailMigrationWithReasons++;
-            writeFailedEmailMigrationsToCsv.write(
-              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
-            );
-            handleErrors(updateMemberRole.error, progressing, spinner);
-            continue;
-          }
-          const reassignedOwner = workspaceOwnerEmail
-            ? workspaceOwnerEmail
-            : 'Organization Owner';
-          spinner.info(
-            chalk.green(
-              `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
-            ),
-          );
-        }
+        const reassignedOwner = workspaceOwnerEmail
+          ? workspaceOwnerEmail
+          : 'Organization Owner';
+        spinner.info(
+          chalk.green(
+            `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
+          ),
+        );
       }
     }
   }

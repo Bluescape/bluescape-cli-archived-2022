@@ -309,6 +309,14 @@ export const handler: Handler = async (argv) => {
         );
         continue;
       }
+      if (sourceMember.role.type === Roles.Visitor) {
+        handleErrors(
+          `${existingEmail} is already a ${Roles.Visitor} in the organization`,
+          progressing,
+          spinner,
+        );
+        continue;
+      }
       let newOwner;
       if (workspaceOwnerEmail) {
         // Should be a valid email

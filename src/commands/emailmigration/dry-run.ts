@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createWriteStream, mkdirSync } from 'fs';
+import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -122,7 +122,9 @@ export const handler: Handler = async (argv) => {
   const totalUsersCount = mappingData.length;
 
   // create a csv file report for email migrations
-  mkdirSync(path.join(__dirname, '../../../dry-run-report'));
+  if (!existsSync(path.join(__dirname, '../../../dry-run-report'))) {
+    mkdirSync(path.join(__dirname, '../../../dry-run-report'));
+  }
   const provideEmailMigrationDryRunReport = createWriteStream(
     path.resolve(
       __dirname,
@@ -158,10 +160,10 @@ export const handler: Handler = async (argv) => {
     // Check email format
     // If not correct then skip and continue;
 
-    const validExistingEmail = validateEmail(email);
+    const validExistingEmail = validateEmail(existingEmail);
     if (validExistingEmail?.error) {
       provideEmailMigrationDryRunReport.write(
-        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error} - ${existingEmail}`,
       );
       handleErrors(validExistingEmail.error, progressing, spinner);
       continue;
@@ -225,7 +227,7 @@ export const handler: Handler = async (argv) => {
       const validSsoEmail = validateEmail(ssoEmail);
       if (validSsoEmail?.error) {
         provideEmailMigrationDryRunReport.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},SSO Email - ${validSsoEmail?.error}`,
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},SSO Email - ${validSsoEmail?.error} - ${ssoEmail}`,
         );
         handleErrors(
           `SSO Email - ${validSsoEmail?.error}`,
@@ -240,7 +242,11 @@ export const handler: Handler = async (argv) => {
 
       if (ssoUserExistenceError) {
         const [{ message }] = ssoUserExistenceError as any;
-        handleErrors(`SSO ${message}`, progressing, spinner);
+        spinner.info(
+          chalk.gray(
+            `${progressing} - SSO ${message}.\n`,
+          ),
+        );
       }
 
       // If SSO user exists check if it belongs to one org/multiple orgs
@@ -369,7 +375,7 @@ export const handler: Handler = async (argv) => {
         const validExistingEmail = validateEmail(workspaceOwnerEmail);
         if (validExistingEmail?.error) {
           provideEmailMigrationDryRunReport.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error} - ${workspaceOwnerEmail}`,
           );
           handleErrors(validExistingEmail.error, progressing, spinner);
           continue;

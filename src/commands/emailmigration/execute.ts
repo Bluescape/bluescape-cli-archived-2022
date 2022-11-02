@@ -158,11 +158,11 @@ export const handler: Handler = async (argv) => {
     // Check email format
     // If not correct then skip and continue;
 
-    const validExistingEmail = validateEmail(email);
+    const validExistingEmail = validateEmail(existingEmail);
     if (validExistingEmail?.error) {
       failedEmailMigrationWithReasons++;
       writeFailedEmailMigrationsToCsv.write(
-        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error} - ${existingEmail}`,
       );
       handleErrors(validExistingEmail.error, progressing, spinner);
       continue;
@@ -226,7 +226,7 @@ export const handler: Handler = async (argv) => {
       if (validSsoEmail?.error) {
         failedEmailMigrationWithReasons++;
         writeFailedEmailMigrationsToCsv.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},SSO Email - ${validSsoEmail?.error}`,
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validSsoEmail?.error} - ${validExistingEmail?.error} - ${ssoEmail}`,
         );
         handleErrors(
           `SSO Email - ${validSsoEmail?.error}`,
@@ -241,7 +241,11 @@ export const handler: Handler = async (argv) => {
 
       if (ssoUserExistenceError) {
         const [{ message }] = ssoUserExistenceError as any;
-        handleErrors(`SSO ${message}`, progressing, spinner);
+        spinner.info(
+          chalk.gray(
+            `${progressing} - SSO ${message}.\n`,
+          ),
+        );
       }
 
       // If SSO user exists check if it belongs to one org/multiple orgs
@@ -273,9 +277,28 @@ export const handler: Handler = async (argv) => {
         if (!targetMemberBelongsToManyOrgs) {
           // Need to migrate all the relationships
           // Delete the sourceMember
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+          );
+          failedEmailMigrationWithReasons++;
+          spinner.info(
+            chalk.gray(
+              `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+            ),
+          );
+          continue;
         }
         // If the ExistingMember belongs to many organization
         // Need to migrate all the relationships
+        writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+        );
+        failedEmailMigrationWithReasons++;
+        spinner.info(
+          chalk.gray(
+            `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+          ),
+        );
       } else {
         // The SSO Email is not already present
         // If the ExistingMember doesn't belong to many organization
@@ -324,7 +347,10 @@ export const handler: Handler = async (argv) => {
         /**
          * For now DO NOT do any action when the ExistingMember belongs to many organization
          */
-
+         writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
+        );
+        failedEmailMigrationWithReasons++;
         spinner.info(
           chalk.gray(
             `${progressing} - ${existingEmail} belongs to many organization. So no email update done.\n`,
@@ -373,7 +399,7 @@ export const handler: Handler = async (argv) => {
         if (validExistingEmail?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error} - ${workspaceOwnerEmail}`,
           );
           handleErrors(validExistingEmail.error, progressing, spinner);
           continue;

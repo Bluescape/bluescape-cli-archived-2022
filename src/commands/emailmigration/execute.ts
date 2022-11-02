@@ -364,7 +364,7 @@ export const handler: Handler = async (argv) => {
 
         if (visitorRole?.error) {
           failedEmailMigrationWithReasons++;
-          handleErrors(validExistingEmail.error, progressing, spinner);
+          handleErrors(visitorRole.error, progressing, spinner);
           continue;
         }
 

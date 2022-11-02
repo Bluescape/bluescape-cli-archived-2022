@@ -277,36 +277,7 @@ export const handler: Handler = async (argv) => {
         );
         // If the ExistingMember belongs to many organization
         // Split the User Accounts
-
-        // Create a new user with the SSO Email
-        // const userCreation = await userService.createUserWithoutOrganization(
-        //   ssoEmail,
-        // );
-        // if (userCreation.error) {
-        //   handleErrors(
-        //     `Failed to create the user ${ssoEmail} ${userCreation.error}`,
-        //     progressing,
-        //     spinner,
-        //   );
-        //   continue;
-        // }
-        // const newSSOUser = (userCreation.data as any) || {};
-
-        // // Add this new user as member to the organization
-        // const orgMember = await emailMigrationService.addMemberToOrganization(
-        //   organizationId,
-        //   newSSOUser.id,
-        //   organization?.defaultOrganizationUserRole?.id,
-        // );
-        // if (orgMember && orgMember?.error) {
-        //   handleErrors(
-        //     `Failed to add the new user ${newSSOUser.id} to organization ${orgMember.error}`,
-        //     progressing,
-        //     spinner,
-        //   );
-        //   continue;
-        // }
-        // targetMember = orgMember;
+        
         // Migrate all the resources to this new user from the Existing user
       }
     } else {
@@ -318,6 +289,11 @@ export const handler: Handler = async (argv) => {
       // Check if this user has owned workspaces
 
       if (workspaceOwnerEmail) {
+        if(!organization?.canHaveGuests) {
+          handleErrors(`Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`, progressing, spinner);
+          continue;
+        }
+
         // Should be a valid email
         const validExistingEmail = validateEmail(workspaceOwnerEmail);
         if (validExistingEmail?.error) {

@@ -250,7 +250,17 @@ export const handler: Handler = async (argv) => {
         if (!sourceMemberBelongsToManyOrgs) {
           if (sourceMember.role.type === Roles.Visitor) {
             // Update the role to member
-
+            const updateMemberRole =
+              await organizationService.updateOrganizationMemberRole(
+                sourceMember.id,
+                organizationId,
+                organization?.defaultOrganizationUserRole?.id
+              );
+            if(updateMemberRole?.error) {
+              handleErrors(updateMemberRole.error, progressing, spinner);
+              continue;
+            }
+            spinner.info(chalk.gray(`${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`));
           }
           const updateUserEmail = await userService.updateUserEmail(
             sourceMember.id,

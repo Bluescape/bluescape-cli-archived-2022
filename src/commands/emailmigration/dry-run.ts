@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createWriteStream } from 'fs';
+import { createWriteStream, mkdirSync } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -122,6 +122,7 @@ export const handler: Handler = async (argv) => {
   const totalUsersCount = mappingData.length;
 
   // create a csv file report for email migrations
+  mkdirSync(path.join(__dirname, '../../../dry-run-report'));
   const provideEmailMigrationDryRunReport = createWriteStream(
     path.resolve(
       __dirname,
@@ -132,7 +133,6 @@ export const handler: Handler = async (argv) => {
   provideEmailMigrationDryRunReport.write(
     'Existing Email,SSO Email,Workspace Reassigning Email,Status',
   );
-
 
   for await (const [index, mappedEmail] of mappedEmails.entries()) {
     const { existing, sso, workspaceOwner } = mappedEmail;
@@ -274,7 +274,7 @@ export const handler: Handler = async (argv) => {
           provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
           );
-           spinner.info(
+          spinner.info(
             chalk.gray(
               `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
             ),
@@ -299,26 +299,32 @@ export const handler: Handler = async (argv) => {
           const reportMessage = [];
           if (sourceMember.role.type === Roles.Visitor) {
             // Update the role to member
-          reportMessage.push(`Role updated to ${organization?.defaultOrganizationUserRole?.name}`)
-          spinner.info(
-            chalk.gray(
-              `${progressing} - ${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.name}\n`,
-            ),
-          );
+            reportMessage.push(
+              `Role updated to ${organization?.defaultOrganizationUserRole?.name}`,
+            );
+            spinner.info(
+              chalk.gray(
+                `${progressing} - ${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.name}\n`,
+              ),
+            );
           }
-          reportMessage.push(`Existing email ${existingEmail} will be migration to ${ssoEmail}`)
+          reportMessage.push(
+            `Existing email ${existingEmail} will be migration to ${ssoEmail}`,
+          );
           provideEmailMigrationDryRunReport.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${reportMessage.join(',')}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${reportMessage.join(
+              ',',
+            )}`,
           );
           continue;
         }
         /**
          * For now DO NOT do any action when the ExistingMember belongs to many organization
          */
-         provideEmailMigrationDryRunReport.write(
+        provideEmailMigrationDryRunReport.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
         );
-         spinner.info(
+        spinner.info(
           chalk.gray(
             `${progressing} - ${existingEmail} belongs to many organization. So no email update done.\n`,
           ),

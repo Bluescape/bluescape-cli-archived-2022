@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createWriteStream, existsSync, mkdirSync } from 'fs';
+import { createWriteStream, mkdirSync } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -18,11 +18,11 @@ import { Builder, Handler } from '../user/get.types';
 import { Roles } from '../user/role.types';
 import { askOrganizationId } from './ask-migration-information';
 
-export const command = 'execute';
-export const desc = 'Execute migration of member emails';
+export const command = 'dry-run';
+export const desc = 'Dry run migration of member emails';
 
 export const builder: Builder = (yargs) =>
-  yargs.example([['$0 emailmigration execute --mapping-csv=xx.csv']]);
+  yargs.example([['$0 emailmigration dry-run --mapping-csv=xx.csv']]);
 
 const handleErrors = (error, progressing, spinner) => {
   if (error) {
@@ -121,26 +121,26 @@ export const handler: Handler = async (argv) => {
 
   const totalUsersCount = mappingData.length;
 
-  let failedEmailMigrationWithReasons = 0;
-
-  // write errors and logs to a csv file
-  if (!existsSync(path.join(__dirname, '../../../logs'))) {
-    mkdirSync(path.join(__dirname, '../../../logs'));
-  }
-  const writeFailedEmailMigrationsToCsv = createWriteStream(
-    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
+  // create a csv file report for email migrations
+  mkdirSync(path.join(__dirname, '../../../dry-run-report'));
+  const provideEmailMigrationDryRunReport = createWriteStream(
+    path.resolve(
+      __dirname,
+      `../../../dry-run-report/email_migration_${Date.now()}.csv`,
+    ),
   );
 
-  writeFailedEmailMigrationsToCsv.write(
-    'Existing Email,SSO Email,Workspace Owner Email,Message',
+  provideEmailMigrationDryRunReport.write(
+    'Existing Email,SSO Email,Workspace Reassigning Email,Status',
   );
 
   for await (const [index, mappedEmail] of mappedEmails.entries()) {
-    const {
-      existing: existingEmail,
-      sso: ssoEmail,
-      workspaceOwner: workspaceOwnerEmail,
-    } = mappedEmail;
+    const { existing, sso, workspaceOwner } = mappedEmail;
+
+    // Change the case insensitive
+    const existingEmail = existing.toLowerCase();
+    const ssoEmail = sso.toLowerCase();
+    const workspaceOwnerEmail = workspaceOwner.toLowerCase();
 
     /**
      * Source Member - Existing Member
@@ -160,8 +160,7 @@ export const handler: Handler = async (argv) => {
 
     const validExistingEmail = validateEmail(email);
     if (validExistingEmail?.error) {
-      failedEmailMigrationWithReasons++;
-      writeFailedEmailMigrationsToCsv.write(
+      provideEmailMigrationDryRunReport.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error}`,
       );
       handleErrors(validExistingEmail.error, progressing, spinner);
@@ -177,8 +176,7 @@ export const handler: Handler = async (argv) => {
       );
 
     if (getOrgMember && getOrgMember?.error) {
-      failedEmailMigrationWithReasons++;
-      writeFailedEmailMigrationsToCsv.write(
+      provideEmailMigrationDryRunReport.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
       );
       handleErrors(
@@ -194,8 +192,7 @@ export const handler: Handler = async (argv) => {
 
     if (!sourceMember) {
       const message = `${existingEmail} is not a member of the organization ${organizationId}`;
-      failedEmailMigrationWithReasons++;
-      writeFailedEmailMigrationsToCsv.write(
+      provideEmailMigrationDryRunReport.write(
         `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed with ${message}`,
       );
       handleErrors(`Failed with ${message}`, progressing, spinner);
@@ -208,11 +205,14 @@ export const handler: Handler = async (argv) => {
       );
 
     if (getSourceMemberOrgs && getSourceMemberOrgs?.error) {
-      failedEmailMigrationWithReasons++;
-      writeFailedEmailMigrationsToCsv.write(
-        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${getSourceMemberOrgs?.error}`,
+      provideEmailMigrationDryRunReport.write(
+        `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed to fetch existing user organizations ${getSourceMemberOrgs?.error}`,
       );
-      handleErrors(getSourceMemberOrgs?.error, progressing, spinner);
+      handleErrors(
+        `Failed to fetch existing user organizations ${getSourceMemberOrgs?.error}`,
+        progressing,
+        spinner,
+      );
       continue;
     }
 
@@ -224,8 +224,7 @@ export const handler: Handler = async (argv) => {
       // Check if SSO email already exists
       const validSsoEmail = validateEmail(ssoEmail);
       if (validSsoEmail?.error) {
-        failedEmailMigrationWithReasons++;
-        writeFailedEmailMigrationsToCsv.write(
+        provideEmailMigrationDryRunReport.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},SSO Email - ${validSsoEmail?.error}`,
         );
         handleErrors(
@@ -254,8 +253,7 @@ export const handler: Handler = async (argv) => {
           );
 
         if (getTargetMemberOrgs && getTargetMemberOrgs?.error) {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
+          provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed to fetch SSO user organizations ${getTargetMemberOrgs?.error}`,
           );
           handleErrors(
@@ -273,58 +271,59 @@ export const handler: Handler = async (argv) => {
         if (!targetMemberBelongsToManyOrgs) {
           // Need to migrate all the relationships
           // Delete the sourceMember
+          provideEmailMigrationDryRunReport.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+          );
+          spinner.info(
+            chalk.gray(
+              `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+            ),
+          );
+          continue;
         }
         // If the ExistingMember belongs to many organization
         // Need to migrate all the relationships
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+        );
+        spinner.info(
+          chalk.gray(
+            `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+          ),
+        );
       } else {
         // The SSO Email is not already present
         // If the ExistingMember doesn't belong to many organization
         // Update the Email address to SSO domain
         if (!sourceMemberBelongsToManyOrgs) {
+          const reportMessage = [];
           if (sourceMember.role.type === Roles.Visitor) {
             // Update the role to member
-            const updateMemberRole =
-              await organizationService.updateOrganizationMemberRole(
-                sourceMember.id,
-                organizationId,
-                organization?.defaultOrganizationUserRole?.id,
-              );
-            if (updateMemberRole?.error) {
-              failedEmailMigrationWithReasons++;
-              writeFailedEmailMigrationsToCsv.write(
-                `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
-              );
-              handleErrors(updateMemberRole.error, progressing, spinner);
-              continue;
-            }
+            reportMessage.push(
+              `Role updated to ${organization?.defaultOrganizationUserRole?.name}`,
+            );
             spinner.info(
               chalk.gray(
-                `${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`,
+                `${progressing} - ${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.name}\n`,
               ),
             );
           }
-          const updateUserEmail = await userService.updateUserEmail(
-            sourceMember.id,
-            ssoEmail,
-            ['id', 'email'],
+          reportMessage.push(
+            `Existing email ${existingEmail} will be migration to ${ssoEmail}`,
           );
-          if (updateUserEmail.error) {
-            failedEmailMigrationWithReasons++;
-            writeFailedEmailMigrationsToCsv.write(
-              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Failed to update user email ${updateUserEmail.error}`,
-            );
-            handleErrors(
-              `Failed to update user email ${updateUserEmail.error}`,
-              progressing,
-              spinner,
-            );
-          }
+          provideEmailMigrationDryRunReport.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${reportMessage.join(
+              ',',
+            )}`,
+          );
           continue;
         }
         /**
          * For now DO NOT do any action when the ExistingMember belongs to many organization
          */
-
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
+        );
         spinner.info(
           chalk.gray(
             `${progressing} - ${existingEmail} belongs to many organization. So no email update done.\n`,
@@ -343,8 +342,7 @@ export const handler: Handler = async (argv) => {
        */
       // Check if this user has owned workspaces
       if (!organization?.canHaveGuests) {
-        failedEmailMigrationWithReasons++;
-        writeFailedEmailMigrationsToCsv.write(
+        provideEmailMigrationDryRunReport.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Organization ${organizationId} doesn't allow to have guests. Please enable the feature to convert to visitor`,
         );
         handleErrors(
@@ -355,8 +353,7 @@ export const handler: Handler = async (argv) => {
         continue;
       }
       if (sourceMember.role.type === Roles.Visitor) {
-        failedEmailMigrationWithReasons++;
-        writeFailedEmailMigrationsToCsv.write(
+        provideEmailMigrationDryRunReport.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} is already a ${Roles.Visitor} in the organization`,
         );
         handleErrors(
@@ -371,8 +368,7 @@ export const handler: Handler = async (argv) => {
         // Should be a valid email
         const validExistingEmail = validateEmail(workspaceOwnerEmail);
         if (validExistingEmail?.error) {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
+          provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
           );
           handleErrors(validExistingEmail.error, progressing, spinner);
@@ -388,8 +384,7 @@ export const handler: Handler = async (argv) => {
           );
 
         if (getOrgMember && getOrgMember?.error) {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
+          provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Error in getting Organization ${organizationId} Member - ${getOrgMember?.error}`,
           );
           handleErrors(
@@ -399,12 +394,10 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
-
         if (valueExists(getOrgMember) && getOrgMember.id) {
           newOwner = getOrgMember;
         } else {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
+          provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Workspace Reassignment Email - ${workspaceOwnerEmail} is not a member of the organization`,
           );
           handleErrors(
@@ -422,72 +415,19 @@ export const handler: Handler = async (argv) => {
           );
 
         if (visitorRole?.error) {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error}`,
+          provideEmailMigrationDryRunReport.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${visitorRole.error}`,
           );
           handleErrors(visitorRole.error, progressing, spinner);
           continue;
         }
 
         if (visitorRole) {
-          const updateMemberRole =
-            newOwner && newOwner?.id
-              ? await organizationService.updateOrganizationMemberRole(
-                  sourceMember.id,
-                  organizationId,
-                  visitorRole,
-                  newOwner.id,
-                )
-              : await organizationService.updateOrganizationMemberRole(
-                  sourceMember.id,
-                  organizationId,
-                  visitorRole,
-                );
-          if (updateMemberRole?.error) {
-            failedEmailMigrationWithReasons++;
-            writeFailedEmailMigrationsToCsv.write(
-              `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${updateMemberRole.error}`,
-            );
-            handleErrors(updateMemberRole.error, progressing, spinner);
-            continue;
-          }
-          const reassignedOwner = workspaceOwnerEmail
-            ? workspaceOwnerEmail
-            : 'Organization Owner';
-          spinner.info(
-            chalk.gray(
-              `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
-            ),
+          provideEmailMigrationDryRunReport.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} role will be updated to Visitor and his workspaces will be reassigned if any`,
           );
         }
       }
     }
-  }
-
-  const endTime = performance.now();
-
-  console.log(`\n`);
-
-  spinner.info(
-    chalk.blue(
-      `Total users: ${totalUsersCount}     Execution Time: ${(
-        endTime - startTime
-      ).toFixed(2)} ms\n`,
-    ),
-  );
-  if (failedEmailMigrationWithReasons === 0) {
-    spinner.succeed(
-      chalk.green(
-        `All users email has been migrated, Successful count - ${totalUsersCount}\n`,
-      ),
-    );
-  } else {
-    spinner.succeed(
-      chalk.green(
-        `Passed: ${totalUsersCount - failedEmailMigrationWithReasons}\n`,
-      ),
-    );
-    spinner.fail(chalk.red(`Failed:  ${failedEmailMigrationWithReasons}\n`));
   }
 };

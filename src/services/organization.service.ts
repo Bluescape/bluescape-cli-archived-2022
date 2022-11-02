@@ -91,7 +91,7 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
-  async updateOrganizationMemberRole(memberId: string,orgnaizationId: string, organizationRoleId: string, newWorkspaceOwnerId: string): Promise<any> {
+  async updateOrganizationMemberRole(memberId: string,orgnaizationId: string, organizationRoleId: string, newWorkspaceOwnerId?: string): Promise<any> {
     let path;
     path = `/organizations/${orgnaizationId}/members/${memberId}/role`;
     if (newWorkspaceOwnerId) {

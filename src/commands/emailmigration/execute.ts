@@ -1,5 +1,5 @@
 import chalk from 'chalk';
-import { createWriteStream, mkdirSync } from 'fs';
+import { createWriteStream, existsSync, mkdirSync } from 'fs';
 import ora from 'ora';
 import path from 'path';
 import { getActiveProfile } from '../../conf';
@@ -124,7 +124,9 @@ export const handler: Handler = async (argv) => {
   let failedEmailMigrationWithReasons = 0;
 
   // write errors and logs to a csv file
-  mkdirSync(path.join(__dirname, '../../../logs'));
+  if (!existsSync(path.join(__dirname, '../../../logs'))) {
+    mkdirSync(path.join(__dirname, '../../../logs'));
+  }
   const writeFailedEmailMigrationsToCsv = createWriteStream(
     path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
   );

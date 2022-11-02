@@ -23,23 +23,27 @@ export const csvFileDataValidation = (
   // Finding duplicates in user emails array
   const mappedEmails: any[] = [];
 
+  if (mappingData.length === 0) {
+    throw new Error(
+      `CSV file is empty. Please provide atleast one user existing email address to migrate.`,
+    );
+  }
+  if (
+    !mappingData[0].hasOwnProperty('Existing Email') ||
+    !mappingData[0].hasOwnProperty('SSO Email') ||
+    !mappingData[0].hasOwnProperty('Workspace Reassignment Email')
+  ) {
+    throw new Error(
+      `CSV file should have expected column headers - Existing Email, SSO Email, Workspace Reassignment Email.`,
+    );
+  }
   mappingData.forEach((email) => {
-    if (
-      email['Existing Email'] &&
-      email['SSO Email'] &&
-      email['Workspace Reassignment Email']
-    ) {
-      // Change the case insensitive
-      mappedEmails.push({
-        existing: email['Existing Email'].toLowerCase(),
-        sso: email['SSO Email'].toLowerCase(),
-        workspaceOwner: email['Workspace Reassignment Email'].toLowerCase(),
-      });
-    } else {
-      throw new Error(
-        `CSV file should have expected column headers - Existing Email, SSO Email, Workspace Reassignment Email.`,
-      );
-    }
+    // Change the case insensitive
+    mappedEmails.push({
+      existing: email['Existing Email'].toLowerCase(),
+      sso: email['SSO Email'].toLowerCase(),
+      workspaceOwner: email['Workspace Reassignment Email'].toLowerCase(),
+    });
   });
 
   const allEmails = [];
@@ -47,12 +51,6 @@ export const csvFileDataValidation = (
     allEmails.push(email.existing);
     allEmails.push(email.sso);
   });
-
-  if (allEmails.length === 0) {
-    throw new Error(
-      `CSV file is empty. Please provide atleast one user existing email address to migrate.`,
-    );
-  }
 
   // Find out existing email duplicates
   const duplicateEmails = toFindDuplicateElements(allEmails);
@@ -71,6 +69,7 @@ export const validateEmail = (email: string): any => {
     const message = `Invalid email format `;
     return { error: message };
   }
+  return true;
 };
 
 export class EmailMigrationService extends FetchService {

@@ -1,9 +1,9 @@
 import validator from 'validator';
-import { organizationService, userService } from './index';
 import { Roles } from '../commands/user/role.types';
 import { Email } from '../types';
 import { valueExists } from '../utils/validators';
 import { FetchService } from './fetch.service';
+import { organizationService, userService } from './index';
 
 const userAttributes = ['id', 'email'];
 const roleAttributes = ['id', 'type'];
@@ -15,34 +15,42 @@ export interface MappedEmailInformation {
 }
 
 const toFindDuplicateElements = (ele: string[]) =>
-  ele.filter((item, index) => (ele.indexOf(item) !== index) && item.length>0);
+  ele.filter((item, index) => ele.indexOf(item) !== index && item.length > 0);
 
 export const csvFileDataValidation = (
   mappingData: Array<Record<string, string>>,
 ): MappedEmailInformation[] => {
   // Finding duplicates in user emails array
   const mappedEmails: any[] = [];
-  mappingData.forEach((email) => {
 
-    // Change the case insensitive
-    mappedEmails.push({
-      existing: email['Existing Email'].toLowerCase(),
-      sso: email['SSO Email'].toLowerCase(),
-      workspaceOwner: email['Workspace Owner Email'].toLowerCase(),
-    });
-  });
-
-  const allEmails = [];
-  mappedEmails.map(email => {
-    allEmails.push(email.existing);
-    allEmails.push(email.sso);
-  });
-
-  if (allEmails.length === 0) {
+  if (mappingData.length === 0) {
     throw new Error(
       `CSV file is empty. Please provide atleast one user existing email address to migrate.`,
     );
   }
+  if (
+    !mappingData[0].hasOwnProperty('Existing Email') ||
+    !mappingData[0].hasOwnProperty('SSO Email') ||
+    !mappingData[0].hasOwnProperty('Workspace Reassignment Email')
+  ) {
+    throw new Error(
+      `CSV file should have expected column headers - Existing Email, SSO Email, Workspace Reassignment Email.`,
+    );
+  }
+  mappingData.forEach((email) => {
+    // Change the case insensitive
+    mappedEmails.push({
+      existing: email['Existing Email'].toLowerCase(),
+      sso: email['SSO Email'].toLowerCase(),
+      workspaceOwner: email['Workspace Reassignment Email'].toLowerCase(),
+    });
+  });
+
+  const allEmails = [];
+  mappedEmails.map((email) => {
+    allEmails.push(email.existing);
+    allEmails.push(email.sso);
+  });
 
   // Find out existing email duplicates
   const duplicateEmails = toFindDuplicateElements(allEmails);
@@ -61,6 +69,7 @@ export const validateEmail = (email: string): any => {
     const message = `Invalid email format `;
     return { error: message };
   }
+  return true;
 };
 
 export class EmailMigrationService extends FetchService {
@@ -118,8 +127,8 @@ export class EmailMigrationService extends FetchService {
 
     if (orgOwner?.members?.results && orgOwner?.members?.results.length > 0) {
       const orgOwnerEmail = orgOwner.members.results[0].member.email;
-       // If the owner email is not provided for migration, throw error and Do Not Proceed further
-     return existingEmails.includes(orgOwnerEmail);
+      // If the owner email is not provided for migration, throw error and Do Not Proceed further
+      return existingEmails.includes(orgOwnerEmail);
     }
     return false;
   }
@@ -196,5 +205,25 @@ export class EmailMigrationService extends FetchService {
       };
     }
     return member;
+  }
+
+  async getOrganizationVisitorRoleId(organizationId: string): Promise<any> {
+    const { data, errors: existenceError } =
+      await organizationService.getOrganizationVisitorRole(
+        organizationId,
+        roleAttributes,
+      );
+
+    if (existenceError) {
+      const [{ message }] = existenceError as any;
+      return { error: message };
+    }
+
+    const visitorRole = (data as any)?.roles?.results || [];
+
+    if (visitorRole.length > 0) {
+      return visitorRole[0].id;
+    }
+    return null;
   }
 }

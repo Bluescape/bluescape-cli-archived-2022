@@ -22,7 +22,9 @@ export const command = 'dry-run';
 export const desc = 'Dry run migration of member emails';
 
 export const builder: Builder = (yargs) =>
-  yargs.example([['$0 emailmigration dry-run --mapping-csv=xx.csv']]);
+  yargs.example([
+    ['$0 emailmigration dry-run --mapping-csv=xx.csv --dry-run-csv=xx.csv'],
+  ]);
 
 const handleErrors = (error, progressing, spinner) => {
   if (error) {
@@ -37,11 +39,18 @@ export const handler: Handler = async (argv) => {
   });
 
   // Get CSV file as an argument.
-  const { mappingCsv } = argv;
+  const { mappingCsv, dryRunCsv } = argv;
 
   // CSV argument is missing
   if (!mappingCsv) {
     throw new Error('CSV file path not proivided --mapping-csv=yy.csv');
+  }
+
+  // Dry run report CSV file name argument is missing
+  if (!dryRunCsv) {
+    throw new Error(
+      'Dry run report CSV file name not provided --dry-run-csv=yy.csv',
+    );
   }
 
   const {
@@ -128,7 +137,7 @@ export const handler: Handler = async (argv) => {
   const provideEmailMigrationDryRunReport = createWriteStream(
     path.resolve(
       __dirname,
-      `../../../dry-run-report/email_migration_${Date.now()}.csv`,
+      `../../../dry-run-report/${dryRunCsv}_${Date.now()}.csv`,
     ),
   );
 
@@ -242,11 +251,7 @@ export const handler: Handler = async (argv) => {
 
       if (ssoUserExistenceError) {
         const [{ message }] = ssoUserExistenceError as any;
-        spinner.info(
-          chalk.gray(
-            `${progressing} - SSO ${message}.\n`,
-          ),
-        );
+        spinner.info(chalk.gray(`${progressing} - SSO ${message}.\n`));
       }
 
       // If SSO user exists check if it belongs to one org/multiple orgs

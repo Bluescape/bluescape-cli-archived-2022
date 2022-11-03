@@ -22,7 +22,9 @@ export const command = 'execute';
 export const desc = 'Execute migration of member emails';
 
 export const builder: Builder = (yargs) =>
-  yargs.example([['$0 emailmigration execute --mapping-csv=xx.csv']]);
+  yargs.example([
+    ['$0 emailmigration execute --mapping-csv=xx.csv --logs-csv=xx.csv'],
+  ]);
 
 const handleErrors = (error, progressing, spinner) => {
   if (error) {
@@ -37,11 +39,16 @@ export const handler: Handler = async (argv) => {
   });
 
   // Get CSV file as an argument.
-  const { mappingCsv } = argv;
+  const { mappingCsv, logsCsv } = argv;
 
   // CSV argument is missing
   if (!mappingCsv) {
     throw new Error('CSV file path not proivided --mapping-csv=yy.csv');
+  }
+
+  // Logs CSV file name argument is missing
+  if (!logsCsv) {
+    throw new Error('Logs CSV file name not provided --logs-csv=yy.csv');
   }
 
   const {
@@ -128,7 +135,7 @@ export const handler: Handler = async (argv) => {
     mkdirSync(path.join(__dirname, '../../../logs'));
   }
   const writeFailedEmailMigrationsToCsv = createWriteStream(
-    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
+    path.resolve(__dirname, `../../../logs/${logsCsv}_${Date.now()}.csv`),
   );
 
   writeFailedEmailMigrationsToCsv.write(

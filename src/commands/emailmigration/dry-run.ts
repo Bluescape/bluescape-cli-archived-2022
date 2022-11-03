@@ -304,20 +304,20 @@ export const handler: Handler = async (argv) => {
           if (sourceMember.role.type === Roles.Visitor) {
             // Update the role to member
             reportMessage.push(
-              `Role updated to ${organization?.defaultOrganizationUserRole?.name}`,
+              `Role updated to ${organization?.defaultOrganizationUserRole?.type}`
             );
             spinner.info(
               chalk.gray(
-                `${progressing} - ${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.name}\n`,
+                `${progressing} - ${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.type}\n`,
               ),
             );
           }
           reportMessage.push(
-            `Existing email ${existingEmail} will be migration to ${ssoEmail}`,
+            `Existing email ${existingEmail} will be migrated to ${ssoEmail}`,
           );
           provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${reportMessage.join(
-              ',',
+              ' & ',
             )}`,
           );
           continue;
@@ -411,26 +411,33 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
+      }
+      // Get Visitor Role Id
+      const visitorRole =
+        await emailMigrationService.getOrganizationVisitorRoleId(
+          organizationId,
+        );
 
-        // Get Visitor Role Id
-        const visitorRole =
-          await emailMigrationService.getOrganizationVisitorRoleId(
-            organizationId,
-          );
+      if (visitorRole?.error) {
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${visitorRole.error}`,
+        );
+        handleErrors(visitorRole.error, progressing, spinner);
+        continue;
+      }
 
-        if (visitorRole?.error) {
-          provideEmailMigrationDryRunReport.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${visitorRole.error}`,
+      if (visitorRole) {
+        const reassignedOwner = workspaceOwnerEmail
+          ? workspaceOwnerEmail
+          : 'Organization Owner';
+          spinner.info(
+            chalk.green(
+              `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
+            ),
           );
-          handleErrors(visitorRole.error, progressing, spinner);
-          continue;
-        }
-
-        if (visitorRole) {
-          provideEmailMigrationDryRunReport.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} role will be updated to Visitor and his workspaces will be reassigned if any`,
-          );
-        }
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} role will be updated to Visitor and his workspaces will be reassigned to ${reassignedOwner} if any`,
+        );
       }
     }
   }

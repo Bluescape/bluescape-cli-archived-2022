@@ -323,7 +323,7 @@ export const handler: Handler = async (argv) => {
             }
             spinner.info(
               chalk.green(
-                `${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.name}\n`,
+                `${progressing} - Updated ${existingEmail} role to ${organization?.defaultOrganizationUserRole?.type}\n`,
               ),
             );
           }

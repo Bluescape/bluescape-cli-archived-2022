@@ -128,7 +128,12 @@ export const handler: Handler = async (argv) => {
     mkdirSync(path.join(__dirname, '../../../logs'));
   }
   const writeFailedEmailMigrationsToCsv = createWriteStream(
-    path.resolve(__dirname, `../../../logs/email_migration_${Date.now()}.csv`),
+    path.resolve(
+      __dirname,
+      `../../../logs/${
+        path.parse(argv.mappingCsv.toString()).name
+      }_${Date.now()}.csv`,
+    ),
   );
 
   writeFailedEmailMigrationsToCsv.write(

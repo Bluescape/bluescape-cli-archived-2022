@@ -128,7 +128,9 @@ export const handler: Handler = async (argv) => {
   const provideEmailMigrationDryRunReport = createWriteStream(
     path.resolve(
       __dirname,
-      `../../../dry-run-report/email_migration_${Date.now()}.csv`,
+      `../../../dry-run-report/${
+        path.parse(argv.mappingCsv.toString()).name
+      }_${Date.now()}.csv`,
     ),
   );
 

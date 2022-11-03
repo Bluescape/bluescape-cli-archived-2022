@@ -21,7 +21,7 @@ export const handler = async (_argv: Arguments): Promise<void> => {
   const {
     name,
     user: { email, firstName, lastName },
-    services: { config },
+    services: { configuration: config },
   } = getActiveProfile();
   if (!name) {
     console.log(chalk.red(`Active profile not found`));

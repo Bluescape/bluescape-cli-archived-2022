@@ -16,7 +16,7 @@ export const builder: Builder = (yargs) =>
 export const handler: Handler = async (argv) => {
 const { name, configUrl } = await askInstanceDetails();
   const {
-    environment_config_url: config,
+    environment_config_url: configuration,
     isam,
     portal_api: portalApi,
     http_collaboration_service_address: collab,
@@ -25,7 +25,7 @@ const { name, configUrl } = await askInstanceDetails();
   addProfile({
     name,
     active: true,
-    services: { config, isam, portalApi, collab, identityApi },
+    services: { configuration, isam, portalApi, collab, identityApi },
   });
   console.log(chalk.green(`${name} profile added`));
 };

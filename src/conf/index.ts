@@ -25,7 +25,7 @@ const schema = {
           type: 'object',
           default: {},
           properties: {
-            config: {
+            configuration: {
               type: 'string',
               default: 'https://config.apps.us.bluescape.com',
               format: 'url',
@@ -101,6 +101,7 @@ export const getActiveProfile = (): any => {
   init();
   const activeIndex = config.get('currentProfileIndex');
   const profiles = config.get('profiles');
+  console.log('\n\n profiles ==>', profiles);
   return profiles[activeIndex];
 };
 
@@ -118,7 +119,7 @@ export const getServiceUrl = (serviceName: Service) => {
     case Service.IDENTITY_API:
       return services.identityApi;
     case Service.CONFIG:
-      return services.config;
+      return services.configuration;
     case Service.UC_CONNECTOR_URL:
       return `${services.ucConnectorUrl}/api/v3`;
   }
@@ -127,6 +128,7 @@ export const getServiceUrl = (serviceName: Service) => {
 export const setUserInfo = (user: any) => {
   const activeIndex = config.get('currentProfileIndex');
   const profiles = config.get('profiles');
+  console.log('\n\n profiles ==>', profiles);
   const userObj = { ...profiles[activeIndex].user, ...user };
   profiles[activeIndex].user = userObj;
   config.set('profiles', profiles);

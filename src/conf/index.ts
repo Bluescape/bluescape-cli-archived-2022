@@ -101,7 +101,6 @@ export const getActiveProfile = (): any => {
   init();
   const activeIndex = config.get('currentProfileIndex');
   const profiles = config.get('profiles');
-  console.log('\n\n profiles ==>', profiles);
   return profiles[activeIndex];
 };
 
@@ -128,7 +127,6 @@ export const getServiceUrl = (serviceName: Service) => {
 export const setUserInfo = (user: any) => {
   const activeIndex = config.get('currentProfileIndex');
   const profiles = config.get('profiles');
-  console.log('\n\n profiles ==>', profiles);
   const userObj = { ...profiles[activeIndex].user, ...user };
   profiles[activeIndex].user = userObj;
   config.set('profiles', profiles);

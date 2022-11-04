@@ -53,7 +53,7 @@ export class UserService extends FetchService {
 
 
   async getUserById(userId: string, attributes: string[]) {
-    const query = `{user(userId:"${userId}"){${attributes.concat("\n")}}}`;
+    const query = `{user(userId:"${userId}"){${attributes.concat('\n')}}}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
@@ -92,6 +92,31 @@ export class UserService extends FetchService {
     const data = await this.request(FetchRequestType.Post, url, {
       email,
     });
+    return data;
+  }
+
+  async getUserOrganizations(userId: string, pageSize: number): Promise<any> {
+    const path = `/users/${userId}/organizations?pageSize=${pageSize}`;
+    const url = this.getUrlForService(Service.ISAM, path);
+    let data;
+    try {
+      data = await this.request(FetchRequestType.Get, url);
+      return data;
+    } catch (error) {
+      return { error };
+    }
+  }
+
+  async updateUserEmail(userId: string, email: string, attributes: string[]) {
+    const query = `mutation { updateUser(
+      userId: "${userId}"
+      input: { email: "${email}" }
+    ) {
+      ${attributes.concat('\n')}
+    }}`
+    ;
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
   }
 }

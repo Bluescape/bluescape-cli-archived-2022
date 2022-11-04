@@ -12,7 +12,7 @@
     "package:macos": "pkg . --no-bytecode --targets node14-macos-x64 --output bin/macos/bluescape",
     "format": "prettier --write",
     "format:check": "prettier --loglevel warn --check \"**/*.{ts,js,json,yaml}\"",
-      "lint": "eslint -c .eslintrc.js \"{src,test}/**/*.ts\" --fix",
+    "lint": "eslint -c .eslintrc.js \"{src,test}/**/*.ts\" --fix",
     "lint:check": "eslint \"src/**/*.ts\"",
     "test": "npm run test "
   },

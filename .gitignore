@@ -35,3 +35,7 @@ lerna-debug.log*
 .vscode-server
 lib/
 build/
+
+# Folders
+/dry-run-report
+/logs

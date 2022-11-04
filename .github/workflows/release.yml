@@ -35,7 +35,7 @@ jobs:
       - name: Configure Git
         working-directory: .github/scripts
         env:
-          GITHUBPAT: ${{ secrets.GITHUBPAT }}
+          GITHUBPAT: ${{ secrets.BDB_GITHUBPAT }}
         run: |
           ./configure_git.sh
           git checkout ${GITHUB_REF##*/}  

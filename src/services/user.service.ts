@@ -95,8 +95,8 @@ export class UserService extends FetchService {
     return data;
   }
 
-  async getUserOrganizations(userId: string, pageSize: number): Promise<any> {
-    const path = `/users/${userId}/organizations?pageSize=${pageSize}`;
+  async getUserOrganizationsExcludingPersonalSpace(userId: string, pageSize: number): Promise<any> {
+    const path = `/users/${userId}/organizations?pageSize=${pageSize}&filterBy=mode ne "basic"`;
     const url = this.getUrlForService(Service.ISAM, path);
     let data;
     try {

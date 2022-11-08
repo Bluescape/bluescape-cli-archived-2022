@@ -78,7 +78,7 @@ export class EmailMigrationService extends FetchService {
   }
 
   async checkIfUserBelongsToManyOrganizations(userId: string): Promise<any> {
-    const { data, error } = await userService.getUserOrganizations(userId, 100);
+    const { data, error } = await userService.getUserOrganizationsExcludingPersonalSpace(userId, 100);
 
     if (error) {
       return { error: `Failed to fetch user organizations ${error}` };

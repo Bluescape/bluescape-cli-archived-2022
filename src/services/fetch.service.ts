@@ -40,7 +40,7 @@ export class FetchService {
     if (status > 399) {
       if (status === 401) {
         deleteUserInfo();
-        throw new Error('Unauthroised. Pleae login again');
+        throw new Error('Unauthorized. Please login again');
       }
     }
   }

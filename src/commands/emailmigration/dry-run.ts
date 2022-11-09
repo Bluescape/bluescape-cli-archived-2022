@@ -97,20 +97,18 @@ export const handler: Handler = async (argv) => {
 
   spinner.start(`Validating Owner email existence in the Mapping CSV`);
 
-  const orgOwner =
-    await emailMigrationService.validateOrganizationOwnerExistence(
+  const organizationOwnerEmail =
+    await emailMigrationService.getOrganizationOwner(
       organizationId,
-      existingEmails,
     );
-  if (orgOwner && orgOwner.error) {
-    spinner.fail(chalk.red(`Error: ${orgOwner.error}`));
+  if (organizationOwnerEmail && organizationOwnerEmail.error) {
+    spinner.fail(chalk.red(`Error: ${organizationOwnerEmail.error}`));
     return;
   }
-  // If the owner email is not provided for mapping file, throw error and Do Not Proceed further
-  if (!orgOwner) {
+  if (!organizationOwnerEmail) {
     spinner.fail(
       chalk.red(
-        `No Owner Email information is found in the Existing Email of uploaded Mapping CSV. Please include owner details to map. We cannot proceed without owner mapping.`,
+        `Failed to fetch organization owner information`,
       ),
     );
     return;
@@ -313,7 +311,7 @@ export const handler: Handler = async (argv) => {
             );
           }
           reportMessage.push(
-            `Existing email ${existingEmail} will be migrated to ${ssoEmail}`,
+            `Existing email ${existingEmail} will be migrated to ${ssoEmail}`
           );
           provideEmailMigrationDryRunReport.write(
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${reportMessage.join(
@@ -344,6 +342,20 @@ export const handler: Handler = async (argv) => {
        * Convert the User to Visitor
        * If the Workspace Owner Email is provided, move it to that user, otherwise move this worksapce to Organization Owner
        */
+
+      // If the organization Owner is not provided SSO Email to migrate, please throw and error and continue
+      if (existingEmail === organizationOwnerEmail) {
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Organization Owner ${existingEmail} cannot to be converted to visitor`,
+        );
+        handleErrors(
+          `Organization Owner ${existingEmail} cannot to be converted to visitor`,
+          progressing,
+          spinner,
+        );
+        continue;
+      }
+
       // Check if this user has owned workspaces
       if (!organization?.canHaveGuests) {
         provideEmailMigrationDryRunReport.write(
@@ -376,6 +388,20 @@ export const handler: Handler = async (argv) => {
             `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail.error} - ${workspaceOwnerEmail}`,
           );
           handleErrors(validExistingEmail.error, progressing, spinner);
+          continue;
+        }
+
+        // Check if the Owner Reassignment Email & Given Existing Email are same
+        // If they are same, throw error, skip and continue
+        if (existingEmail === workspaceOwnerEmail) {
+          provideEmailMigrationDryRunReport.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},Owner Reassignment Email - ${workspaceOwnerEmail} cannot be the same as Existing Email - ${existingEmail}`,
+          );
+          handleErrors(
+            `Owner Reassignment Email - ${workspaceOwnerEmail} cannot be the same as Existing Email - ${existingEmail}`,
+            progressing,
+            spinner,
+          );
           continue;
         }
 
@@ -430,11 +456,11 @@ export const handler: Handler = async (argv) => {
         const reassignedOwner = workspaceOwnerEmail
           ? workspaceOwnerEmail
           : 'Organization Owner';
-          spinner.info(
-            chalk.green(
-              `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
-            ),
-          );
+        spinner.info(
+          chalk.green(
+            `${progressing} - Updated ${existingEmail} role to visitor and reassigned his worksapces to ${reassignedOwner}\n`,
+          ),
+        );
         provideEmailMigrationDryRunReport.write(
           `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} role will be updated to Visitor and his workspaces will be reassigned to ${reassignedOwner} if any`,
         );

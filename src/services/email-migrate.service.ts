@@ -110,9 +110,8 @@ export class EmailMigrationService extends FetchService {
     return true;
   }
 
-  async validateOrganizationOwnerExistence(
+  async getOrganizationOwner(
     organizationId: string,
-    existingEmails: string[],
   ): Promise<any> {
     const { data, errors: ownerExistenceError } =
       await organizationService.getOrganizationOwner(organizationId, [
@@ -127,8 +126,7 @@ export class EmailMigrationService extends FetchService {
 
     if (orgOwner?.members?.results && orgOwner?.members?.results.length > 0) {
       const orgOwnerEmail = orgOwner.members.results[0].member.email;
-      // If the owner email is not provided for migration, throw error and Do Not Proceed further
-      return existingEmails.includes(orgOwnerEmail);
+      return orgOwnerEmail;
     }
     return false;
   }

@@ -11,7 +11,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
         if (isExternalSubscriptionId(value)) {
           return true;
         } else {
-          return 'Please enter valid external subscription Id.';
+          return 'Please enter valid external subscription Id';
         }
       },
     },
@@ -23,7 +23,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
         if (Number.isInteger(value)) {
           return true;
         } else {
-          return 'Please enter valid external subscription Id.';
+          return 'Please enter valid external subscription version';
         }
       },
     },
@@ -35,7 +35,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
         if (Number.isInteger(value)) {
           return true;
         } else {
-          return 'Please enter valid license quantity.';
+          return 'Please enter valid license quantity';
         }
       },
     },

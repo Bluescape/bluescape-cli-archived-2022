@@ -11,7 +11,6 @@ export class ProvisionLicenseService extends FetchService {
     legacySubscriptionInput: any,
     attributes: string[],
   ): Promise<any> {
-<<<<<<< HEAD
     const {
       externalSubscriptionId,
       externalSubscriptionVersion,
@@ -33,21 +32,6 @@ export class ProvisionLicenseService extends FetchService {
     const query = `mutation{ linkExternalLegacySubscription(
       organizationId:"${organizationId}", 
       input: { ${mutationInput} }) {
-=======
-    const query = `mutation{ linkExternalLegacySubscription(
-      organizationId:"${organizationId}", 
-      input: { externalSubscriptionId: "${
-        legacySubscriptionInput.externalSubscriptionId
-      }", externalSubscriptionVersion: ${
-      legacySubscriptionInput.externalSubscriptionVersion
-    }, licenseQuantity: ${legacySubscriptionInput.licenseQuantity}, currency: ${
-      legacySubscriptionInput.currency
-    }, interval: ${
-      legacySubscriptionInput.interval
-    }, organizationStorageLimitMb: ${
-      legacySubscriptionInput.organizationStorageLimitMb
-    }}) {
->>>>>>> f60539db34f134fe870e3bfebfa60be195761e68
           ${attributes.concat('\n')}
       }
     }`;

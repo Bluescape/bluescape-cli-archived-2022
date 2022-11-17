@@ -1,5 +1,5 @@
 import inquirer from 'inquirer';
-import { isExternalSubscriptionId } from '../../utils/validators';
+import { isExternalSubscriptionId, isNumber } from '../../utils/validators';
 
 export async function askLegacySubscriptionDetails(): Promise<any> {
   const legacySubscriptionInputPrompt = [
@@ -20,7 +20,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
       type: 'input',
       message: 'Enter the external subscription version:',
       validate: function (value: string) {
-        if (Number.isInteger(value) || !value.length) {
+        if (isNumber(value)) {
           return true;
         } else {
           return 'Please enter valid external subscription version';
@@ -32,7 +32,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
       type: 'input',
       message: 'Enter the license quantity:',
       validate: function (value: string) {
-        if (Number.isInteger(value) || !value.length) {
+        if (isNumber(value) || !value.length) {
           return true;
         } else {
           return 'Please enter valid license quantity';
@@ -58,7 +58,7 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
       type: 'input',
       message: 'Enter organization storage limit Mb:',
       validate: function (value: string) {
-        if (Number.isInteger(value) || !value.length) {
+        if (isNumber(value) || !value.length) {
           return true;
         } else {
           return 'Please enter valid organization storage limit Mb';

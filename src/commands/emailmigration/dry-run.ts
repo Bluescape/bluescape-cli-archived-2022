@@ -302,7 +302,7 @@ export const handler: Handler = async (argv) => {
           if (sourceMember.role.type === Roles.Visitor) {
             // Update the role to member
             reportMessage.push(
-              `Role updated to ${organization?.defaultOrganizationUserRole?.type}`
+              `${existingEmail} role will be updated to ${organization?.defaultOrganizationUserRole?.type}`
             );
             spinner.info(
               chalk.gray(

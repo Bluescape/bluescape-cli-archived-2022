@@ -17,10 +17,17 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
     },
     {
       name: 'externalSubscriptionVersion',
+<<<<<<< HEAD
       type: 'input',
       message: 'Enter the external subscription version:',
       validate: function (value: string) {
         if (Number.isInteger(value) || !value.length) {
+=======
+      type: 'number',
+      message: 'Enter the external subscription version:',
+      validate: function (value: number) {
+        if (Number.isInteger(value)) {
+>>>>>>> f60539db34f134fe870e3bfebfa60be195761e68
           return true;
         } else {
           return 'Please enter valid external subscription version';
@@ -29,10 +36,17 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
     },
     {
       name: 'licenseQuantity',
+<<<<<<< HEAD
       type: 'input',
       message: 'Enter the license quantity:',
       validate: function (value: string) {
         if (Number.isInteger(value) || !value.length) {
+=======
+      type: 'number',
+      message: 'Enter the license quantity:',
+      validate: function (value: number) {
+        if (Number.isInteger(value)) {
+>>>>>>> f60539db34f134fe870e3bfebfa60be195761e68
           return true;
         } else {
           return 'Please enter valid license quantity';
@@ -55,10 +69,17 @@ export async function askLegacySubscriptionDetails(): Promise<any> {
     },
     {
       name: 'organizationStorageLimitMb',
+<<<<<<< HEAD
       type: 'input',
       message: 'Enter organization storage limit Mb:',
       validate: function (value: string) {
         if (Number.isInteger(value) || !value.length) {
+=======
+      type: 'number',
+      message: 'Enter organization storage limit Mb:',
+      validate: function (value: number) {
+        if (Number.isInteger(value)) {
+>>>>>>> f60539db34f134fe870e3bfebfa60be195761e68
           return true;
         } else {
           return 'Please enter valid organization storage limit Mb';

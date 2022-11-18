@@ -84,9 +84,13 @@ export const handler: Handler = async (argv) => {
   );
 
   if (result.errors) {
-    spinner.fail(chalk.red(JSON.stringify(result)));
+    spinner.fail(chalk.red(result.errors[0].message));
     return;
   }
-  spinner.succeed(chalk.green('Linked the subscription to the organization!'));
+  spinner.succeed(
+    chalk.green(
+      'Successfully linked the external legacy subscription to the organization!',
+    ),
+  );
   spinner.succeed(chalk.green(JSON.stringify(result)));
 };

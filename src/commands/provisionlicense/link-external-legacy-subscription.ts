@@ -70,10 +70,13 @@ export const handler: Handler = async (argv) => {
     spinner.fail(chalk.red(result?.errors[0]?.message));
     return;
   }
+
+  if(result && result?.data){
   spinner.succeed(
     chalk.green(
       `Successfully linked the external legacy subscription ${legacySubscriptionInput.externalSubscriptionId}  to the organization ${organizationId}!`,
     ),
   );
   spinner.succeed(chalk.green(JSON.stringify(result.data.linkExternalLegacySubscription)));
+  }
 };

@@ -23,6 +23,8 @@ export class ProvisionLicenseService extends FetchService {
     externalSubscriptionVersion: ${externalSubscriptionVersion}, 
     currency: ${currency}, 
     interval: ${interval}, `;
+
+    // check if optional argument values are present, if true then append them to mutationInput
     if (licenseQuantity) {
       mutationInput += `licenseQuantity: ${licenseQuantity}, `;
     }

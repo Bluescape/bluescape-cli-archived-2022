@@ -49,25 +49,8 @@ export const handler: Handler = async (argv) => {
   }
 
   const organizationId = await askOrganizationId();
+
   const legacySubscriptionInput = await askLegacySubscriptionDetails();
-
-  // Validate if the provided organization exists
-  const { data, error: errInFetchingOrg } =
-    await organizationService.getOrganizationById(organizationId);
-  if (errInFetchingOrg) {
-    spinner.fail(
-      chalk.red(
-        `Error in getting Organization ${organizationId} details ${errInFetchingOrg}`,
-      ),
-    );
-    return;
-  }
-  const organization = (data as any)?.organization || {};
-  if (!organization) {
-    spinner.fail(chalk.red(`Organization ${organizationId} not found`));
-    return;
-  }
-
   const result = await provisionLicenseService.linkExternalLegacySubscription(
     organizationId,
     legacySubscriptionInput,
@@ -84,13 +67,13 @@ export const handler: Handler = async (argv) => {
   );
 
   if (result.errors) {
-    spinner.fail(chalk.red(result.errors[0].message));
+    spinner.fail(chalk.red(result?.errors[0]?.message));
     return;
   }
   spinner.succeed(
     chalk.green(
-      'Successfully linked the external legacy subscription to the organization!',
+      `Successfully linked the external legacy subscription ${legacySubscriptionInput.externalSubscriptionId}  to the organization ${organizationId}!`,
     ),
   );
-  spinner.succeed(chalk.green(JSON.stringify(result)));
+  spinner.succeed(chalk.green(JSON.stringify(result.data.linkExternalLegacySubscription)));
 };

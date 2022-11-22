@@ -66,7 +66,7 @@ export const handler: Handler = async (argv) => {
     ],
   );
 
-  if (result.errors) {
+  if (result && result?.errors) {
     spinner.fail(chalk.red(result?.errors[0]?.message));
     return;
   }

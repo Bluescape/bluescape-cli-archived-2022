@@ -3,7 +3,6 @@ import ora from 'ora';
 import { getActiveProfile } from '../../conf';
 import {
   emailMigrationService,
-  organizationService,
   provisionLicenseService,
 } from '../../services';
 import { askOrganizationId } from '../emailmigration/ask-migration-information';
@@ -66,17 +65,23 @@ export const handler: Handler = async (argv) => {
     ],
   );
 
-  if (result && result?.errors) {
-    spinner.fail(chalk.red(result?.errors[0]?.message));
-    return;
+  if(result) {
+    if(result?.errors) {
+      spinner.fail(chalk.red(result?.errors[0]?.message));
+      return;
+    }
+    if(result?.data?.linkExternalLegacySubscription) {
+      spinner.succeed(
+          chalk.green(
+            `Successfully linked the external legacy subscription ${legacySubscriptionInput.externalSubscriptionId}  to the organization ${organizationId}!`,
+          ),
+        );
+        spinner.succeed(chalk.green(JSON.stringify(result.data.linkExternalLegacySubscription)));
+        return;
+    }
   }
-
-  if(result && result?.data){
-  spinner.succeed(
-    chalk.green(
-      `Successfully linked the external legacy subscription ${legacySubscriptionInput.externalSubscriptionId}  to the organization ${organizationId}!`,
-    ),
-  );
-  spinner.succeed(chalk.green(JSON.stringify(result.data.linkExternalLegacySubscription)));
+  else {
+    spinner.fail(chalk.red(`Failed to fetch external legacy subscription results`));
+    return;
   }
 };

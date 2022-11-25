@@ -369,18 +369,16 @@ export const handler: Handler = async (argv) => {
 
       // If the organization Owner is not provided SSO Email to migrate, please throw and error and continue
       if (existingEmail === organizationOwnerEmail) {
-        if (!valueExists(ssoEmail)) {
-          failedEmailMigrationWithReasons++;
-          writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error} - ${existingEmail}`,
-          );
-          handleErrors(
-            `Organization Owner ${existingEmail} cannot to be converted to visitor`,
-            progressing,
-            spinner,
-          );
-          continue;
-        }
+        failedEmailMigrationWithReasons++;
+        writeFailedEmailMigrationsToCsv.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validExistingEmail?.error} - ${existingEmail}`,
+        );
+        handleErrors(
+          `Organization Owner ${existingEmail} cannot to be converted to visitor`,
+          progressing,
+          spinner,
+        );
+        continue;
       }
       // Check if this user has owned workspaces
       if (!organization?.canHaveGuests) {

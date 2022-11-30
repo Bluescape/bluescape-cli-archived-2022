@@ -65,4 +65,10 @@ you can uninstall `bluescape cli` via npm.
 
 ```sh
 $ npm uninstall  @bluescape/cli -g
+
+
+### Provisioning license quantity of a legacy enterprise
+
+# Link an external legacy enterprise subscription to the organization
+$ bluescape provisionlicense link-external-legacy-subscription
 ```

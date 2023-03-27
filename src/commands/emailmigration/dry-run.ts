@@ -440,8 +440,9 @@ export const handler: Handler = async (argv) => {
       }
       // Get Visitor Role Id
       const visitorRole =
-        await emailMigrationService.getOrganizationVisitorRoleId(
+        await emailMigrationService.getOrganizationRoleId(
           organizationId,
+          Roles.Visitor,
         );
 
       if (visitorRole?.error) {

@@ -262,39 +262,73 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
-        if (getTargetMemberOrgs) {
-          targetMemberBelongsToManyOrgs = true;
-        }
+
         // The SSO Email already present
-        // If the SSO Member doesn't belong to many organization
-        if (!targetMemberBelongsToManyOrgs) {
-          // Need to migrate all the relationships
-          // Delete the sourceMember
-          writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+        // If the Target Member doesn't belong to many organization
+
+        // Need to migrate all the relationships from source to target member - Request for transfer
+
+        const validateToTransferResources =
+          await emailMigrationService.splitOrMergeAccount(
+            organizationId,
+            ssoEmail,
+            targetMember.id,
           );
+        if (validateToTransferResources && validateToTransferResources?.error) {
           failedEmailMigrationWithReasons++;
-          spinner.info(
-            chalk.gray(
-              `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
-            ),
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validateToTransferResources?.error}`,
           );
-          continue;
-        }
-        // If the ExistingMember belongs to many organization
-        // Need to migrate all the relationships
-        writeFailedEmailMigrationsToCsv.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+          handleErrors(
+            `Error in merging Organization ${organizationId} Member - ${validateToTransferResources?.error}`,
+            progressing,
+            spinner,
         );
-        failedEmailMigrationWithReasons++;
+        continue;
+        }
         spinner.info(
-          chalk.gray(
-            `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+          chalk.green(
+            `${progressing} - SSO Email already exists. Added ${ssoEmail} as member to ${organizationId} organization. \n`,
           ),
         );
+        const requestToTransferResources =
+          await emailMigrationService.requestToTransferMemberResourcesInOrganization(
+            organizationId,
+            sourceMember.id,
+            targetMember.id,
+          );
+        if (requestToTransferResources.error) {
+          if (
+            requestToTransferResources.error &&
+            requestToTransferResources.error?.statusCode === 404
+          ) {
+            spinner.info(
+              chalk.green(
+                `${progressing} - ${existingEmail} does not have any resources in ${organization.id}.\n`,
+              ),
+            );
+            continue;
+          }
+          // failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources`,
+          );
+          handleErrors(
+            `Failed to send request to transfer resources ${requestToTransferResources.error}`,
+            progressing,
+            spinner,
+          );
+          continue;
+        } else {
+          spinner.info(
+            chalk.green(
+              `${progressing} - SSO Email already exists. Request to transfer resources from ${existingEmail} to ${ssoEmail} is sent \n`,
+            ),
+          );
+        }
       } else {
         // The SSO Email is not already present
-        // If the ExistingMember doesn't belong to many organization
+        // If the SourceMember doesn't belong to many organization
         // Update the Email address to SSO domain
         if (!sourceMemberBelongsToManyOrgs) {
           if (sourceMember.role.type === Roles.Visitor) {
@@ -344,21 +378,67 @@ export const handler: Handler = async (argv) => {
           continue;
         }
         /**
-         * For now DO NOT do any action when the ExistingMember belongs to many organization
+         * ExistingMember belongs to many organization
          */
-        writeFailedEmailMigrationsToCsv.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
-        );
-        failedEmailMigrationWithReasons++;
+        const validateToTransferResources =
+          await emailMigrationService.splitOrMergeAccount(
+            organizationId,
+            ssoEmail,
+            sourceMember.id,
+          );
+        if (validateToTransferResources && validateToTransferResources?.error) {
+          failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validateToTransferResources?.error}`,
+          );
+          handleErrors(
+            `Error in merging Organization ${organizationId} Member - ${validateToTransferResources?.error}`,
+            progressing,
+            spinner,
+          );
+          continue;
+        }
+
         spinner.info(
-          chalk.gray(
-            `${progressing} - ${existingEmail} belongs to many organization. So no email update done.\n`,
+          chalk.green(
+            `${progressing} - SSO Email does not exists. So, created a new user with ${ssoEmail} and added as a member to ${organizationId} organization. \n`,
           ),
         );
-        // If the ExistingMember belongs to many organization
-        // Split the User Accounts
-
-        // Migrate all the resources to this new user from the Existing user
+        const requestToTransferResources =
+          await emailMigrationService.requestToTransferMemberResourcesInOrganization(
+            organizationId,
+            sourceMember.id,
+            targetMember.id,
+          );
+        if (requestToTransferResources.error) {
+          if (
+            requestToTransferResources.error &&
+            requestToTransferResources.error?.statusCode === 404
+          ) {
+            spinner.info(
+              chalk.green(
+                `${progressing} - ${existingEmail} does not have any resources in ${organization.id}.\n`,
+              ),
+            );
+            continue;
+          }
+          // failedEmailMigrationWithReasons++;
+          writeFailedEmailMigrationsToCsv.write(
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources`,
+          );
+          handleErrors(
+            `Failed to send request to transfer resources ${requestToTransferResources.error}`,
+            progressing,
+            spinner,
+          );
+          continue;
+        } else {
+          spinner.info(
+            chalk.green(
+              `${progressing} - SSO Email already exists. Request to transfer resources from ${existingEmail} to ${ssoEmail} is sent \n`,
+            ),
+          );
+        }
       }
     } else {
       /**
@@ -472,8 +552,9 @@ export const handler: Handler = async (argv) => {
 
       // Get Visitor Role Id
       const visitorRole =
-        await emailMigrationService.getOrganizationVisitorRoleId(
+        await emailMigrationService.getOrganizationRoleId(
           organizationId,
+          Roles.Visitor,
         );
 
       if (visitorRole?.error) {

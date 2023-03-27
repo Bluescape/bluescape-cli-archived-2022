@@ -1,5 +1,6 @@
 import { FetchRequestType, Service } from '../types';
 import { FetchService } from './fetch.service';
+import { Roles } from '../commands/user/role.types';
 
 export class OrganizationService extends FetchService {
   constructor() {
@@ -91,6 +92,23 @@ export class OrganizationService extends FetchService {
     return data;
   }
 
+  async requestToTransferMemberResourcesInOrganization(
+    organizationId: string,
+    sourceMemberId: string,
+    targetMemberId: string,
+  ): Promise<any> {
+    const query = `mutation{requestTransferMemberResources(
+      organizationId:"${organizationId}", 
+      sourceMemberId:"${sourceMemberId}", 
+      targetMemberId:"${targetMemberId}", 
+      input: { includeWorkspacesOwned: true , includeWorkspacesShared: true, includeTemplatesOwned: true})
+    }`;
+
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+  
   async updateOrganizationMemberRole(memberId: string,orgnaizationId: string, organizationRoleId: string, newWorkspaceOwnerId?: string): Promise<any> {
     let path;
     path = `/organizations/${orgnaizationId}/members/${memberId}/role`;
@@ -114,16 +132,17 @@ export class OrganizationService extends FetchService {
     }
   }
 
-  async getOrganizationVisitorRole(
+  async getOrganizationRoleByType(
     orgnaizationId: string,
     attributes: string[],
+    type: Roles
   ): Promise<any> {
     const query = `{roles(
       filtering: {
         and: [
           { organizationId: { eq: "${orgnaizationId}" } }
           { resourceType: { eq: Organization } }
-          { type: { eq: Visitor } }
+          { type: { eq: ${type} } }
           { level: { eq: Primary } }
           { isCustom: { eq: false } }
         ]

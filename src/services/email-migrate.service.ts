@@ -78,7 +78,8 @@ export class EmailMigrationService extends FetchService {
   }
 
   async checkIfUserBelongsToManyOrganizations(userId: string): Promise<any> {
-    const { data, error } = await userService.getUserOrganizationsExcludingPersonalSpace(userId, 100);
+    const { data, error } =
+      await userService.getUserOrganizationsExcludingPersonalSpace(userId, 100);
 
     if (error) {
       return { error: `Failed to fetch user organizations ${error}` };
@@ -110,9 +111,7 @@ export class EmailMigrationService extends FetchService {
     return true;
   }
 
-  async getOrganizationOwner(
-    organizationId: string,
-  ): Promise<any> {
+  async getOrganizationOwner(organizationId: string): Promise<any> {
     const { data, errors: ownerExistenceError } =
       await organizationService.getOrganizationOwner(organizationId, [
         'id',
@@ -205,11 +204,15 @@ export class EmailMigrationService extends FetchService {
     return member;
   }
 
-  async getOrganizationVisitorRoleId(organizationId: string): Promise<any> {
+  async getOrganizationRoleId(
+    organizationId: string,
+    type: Roles,
+  ): Promise<any> {
     const { data, errors: existenceError } =
-      await organizationService.getOrganizationVisitorRole(
+      await organizationService.getOrganizationRoleByType(
         organizationId,
         roleAttributes,
+        type,
       );
 
     if (existenceError) {
@@ -223,5 +226,111 @@ export class EmailMigrationService extends FetchService {
       return visitorRole[0].id;
     }
     return null;
+  }
+
+  async requestToTransferMemberResourcesInOrganization(
+    organizationId: string,
+    sourceMemberId: string,
+    targetMemberId: string,
+  ): Promise<any> {
+    const { data, errors: existenceError } =
+      await organizationService.requestToTransferMemberResourcesInOrganization(
+        organizationId,
+        sourceMemberId,
+        targetMemberId,
+      );
+
+    if (existenceError) {
+      const [{ message, extensions }] = existenceError as any;
+      const error = {
+        message,
+        statusCode: extensions.statusCode,
+      };
+      return { error };
+    }
+    const requestSent = (data as any)?.requestTransferMemberResources || false;
+
+    if (valueExists(requestSent) && requestSent) {
+      return true;
+    }
+    return false;
+  }
+
+  async updateUserEmail(userId: string, email: string): Promise<any> {
+    const { data, errors: updateEmailError } =
+      await userService.updateUserEmail(userId, email, userAttributes);
+
+    if (updateEmailError) {
+      const [{ message }] = updateEmailError as any;
+      return { error: message };
+    }
+    return data;
+  }
+
+  /**
+   *
+   * @param organizationId
+   * @param ssoEmail
+   * @param sourceMemberId
+   * @param targetMemberId
+   * @returns targetMemberId - if it can be the newly created, or the existing one
+   */
+  async splitOrMergeAccount(
+    organizationId: string,
+    ssoEmail: string,
+    targetMemberId?: string,
+  ): Promise<any> {
+    let targetMember;
+    let isOrgMember = false;
+    if (!valueExists(targetMemberId)) {
+      const { data, errors: existenceError } =
+        await userService.createUserWithoutOrganization(ssoEmail);
+
+      if (existenceError) {
+        const [{ message, extensions }] = existenceError as any;
+        const error = {
+          message,
+          statusCode: extensions.statusCode,
+        };
+        return { error };
+      }
+      targetMember = data || false;
+    } else {
+      // The SSO Email already present
+      // If the SSO Member doesn't belong to many organization
+      // Check if the target user belongs to this organization already
+      const getTargetOrgMember = await this.getOrganizationMemberByEmail(
+        organizationId,
+        ssoEmail,
+      );
+      if (getTargetOrgMember && getTargetOrgMember?.error) {
+        return { error: getTargetOrgMember?.error };
+      }
+      isOrgMember = true;
+    }
+    // If the ssoEmail user exists, and not a member of the organization, add him to the org.
+    if (!isOrgMember) {
+      // targetOrgMember = getTargetOrgMember;
+      // Get Member Role Id
+      const memberRole = await this.getOrganizationRoleId(
+        organizationId,
+        Roles.User,
+      );
+
+      if (memberRole?.error) {
+        return { error: memberRole?.error };
+      }
+
+      const addOrgMember = await this.addMemberToOrganization(
+        organizationId,
+        targetMember.id || targetMemberId,
+        memberRole,
+      );
+
+      if (addOrgMember && addOrgMember?.error) {
+        return { error: addOrgMember?.error };
+      }
+      return targetMember.id || targetMemberId;
+    }
   }
 }

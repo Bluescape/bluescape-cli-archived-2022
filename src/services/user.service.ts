@@ -1,4 +1,5 @@
 import { FetchRequestType, Service } from '../types';
+import { valueExists } from '../utils/validators';
 import { FetchService } from './fetch.service';
 
 export class UserService extends FetchService {
@@ -64,7 +65,11 @@ export class UserService extends FetchService {
     newWorkspaceOwnerId: string,
     permanentDelete: boolean,
   ) {
-    const query = `mutation {  deleteUser(    userId:"${userId}"  newWorkspaceOwnerId: "${newWorkspaceOwnerId}"    permanentDelete: ${permanentDelete}  )}`;
+    let includeNewWsOwnerId = '';
+    if (valueExists(newWorkspaceOwnerId)) {
+      includeNewWsOwnerId = ` newWorkspaceOwnerId: "${newWorkspaceOwnerId}" `;
+    }
+    const query = `mutation {  deleteUser(    userId:"${userId}" ${includeNewWsOwnerId} permanentDelete: ${permanentDelete}  )}`;
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;

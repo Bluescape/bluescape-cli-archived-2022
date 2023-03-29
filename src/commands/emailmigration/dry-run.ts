@@ -265,32 +265,16 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
-        if (getTargetMemberOrgs) {
-          targetMemberBelongsToManyOrgs = true;
-        }
         // The SSO Email already present
         // If the SSO Member doesn't belong to many organization
-        if (!targetMemberBelongsToManyOrgs) {
-          // Need to migrate all the relationships
-          // Delete the sourceMember
-          provideEmailMigrationDryRunReport.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
-          );
-          spinner.info(
-            chalk.gray(
-              `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
-            ),
-          );
-          continue;
-        }
         // If the ExistingMember belongs to many organization
         // Need to migrate all the relationships
         provideEmailMigrationDryRunReport.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already used. So no email migration done`,
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${ssoEmail} is already exist. We will raise request to transfer resources from ${existingEmail} to ${ssoEmail}`,
         );
         spinner.info(
           chalk.gray(
-            `${progressing} - ${ssoEmail} is already used. So no email migration done.\n`,
+            `${progressing} - ${ssoEmail} is already exist. We will raise request to transfer resources from ${existingEmail} to ${ssoEmail}\n`,
           ),
         );
       } else {
@@ -320,21 +304,15 @@ export const handler: Handler = async (argv) => {
           );
           continue;
         }
-        /**
-         * For now DO NOT do any action when the ExistingMember belongs to many organization
-         */
-        provideEmailMigrationDryRunReport.write(
-          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So no email update done`,
-        );
-        spinner.info(
-          chalk.gray(
-            `${progressing} - ${existingEmail} belongs to many organization. So no email update done.\n`,
-          ),
-        );
+        
+        
         // If the ExistingMember belongs to many organization
         // Split the User Accounts
 
         // Migrate all the resources to this new user from the Existing user
+        provideEmailMigrationDryRunReport.write(
+          `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${existingEmail} belongs to many organization. So we will request to transfer the resources (workspaces/templates) to ${ssoEmail}, after creating a new user with ${ssoEmail} and adding as member to this organization`,
+        );
       }
     } else {
       /**
@@ -440,7 +418,7 @@ export const handler: Handler = async (argv) => {
       }
       // Get Visitor Role Id
       const visitorRole =
-        await emailMigrationService.getOrganizationRoleId(
+        await emailMigrationService.getOrganizationRoleByType(
           organizationId,
           Roles.Visitor,
         );

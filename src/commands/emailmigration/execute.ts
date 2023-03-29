@@ -172,7 +172,6 @@ export const handler: Handler = async (argv) => {
         organizationId,
         existingEmail,
       );
-
     if (getOrgMember && getOrgMember?.error) {
       failedEmailMigrationWithReasons++;
       writeFailedEmailMigrationsToCsv.write(
@@ -243,13 +242,11 @@ export const handler: Handler = async (argv) => {
 
       // If SSO user exists check if it belongs to one org/multiple orgs
       targetMember = (data as any)?.user || {};
-
       if (valueExists(targetMember) && targetMember?.id) {
         const getTargetMemberOrgs =
           await emailMigrationService.checkIfUserBelongsToManyOrganizations(
             targetMember.id,
           );
-
         if (getTargetMemberOrgs && getTargetMemberOrgs?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
@@ -267,35 +264,34 @@ export const handler: Handler = async (argv) => {
         // If the Target Member doesn't belong to many organization
 
         // Need to migrate all the relationships from source to target member - Request for transfer
-
-        const validateToTransferResources =
+        const targettedMember =
           await emailMigrationService.splitOrMergeAccount(
             organizationId,
             ssoEmail,
             targetMember.id,
           );
-        if (validateToTransferResources && validateToTransferResources?.error) {
+        if (targettedMember && targettedMember?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validateToTransferResources?.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${targettedMember?.error}`,
           );
           handleErrors(
-            `Error in merging Organization ${organizationId} Member - ${validateToTransferResources?.error}`,
+            `Error in merging Organization ${organizationId} Member - ${targettedMember?.error}`,
             progressing,
             spinner,
-        );
-        continue;
+          );
+          continue;
         }
         spinner.info(
           chalk.green(
-            `${progressing} - SSO Email already exists. Added ${ssoEmail} as member to ${organizationId} organization. \n`,
+            `${progressing} - SSO Email already exists. \n`,
           ),
         );
         const requestToTransferResources =
           await emailMigrationService.requestToTransferMemberResourcesInOrganization(
             organizationId,
             sourceMember.id,
-            targetMember.id,
+            targettedMember,
           );
         if (requestToTransferResources.error) {
           if (
@@ -307,6 +303,20 @@ export const handler: Handler = async (argv) => {
                 `${progressing} - ${existingEmail} does not have any resources in ${organization.id}.\n`,
               ),
             );
+            if (!sourceMemberBelongsToManyOrgs) {
+              const { data: delRes, errors: delErr } =
+                await userService.deleteUserViaGL(sourceMember.id, null, true);
+              if (delErr) {
+                const [{ message }] = delErr as any;
+                handleErrors(
+                  `Error when deleting user ${existingEmail} - ${message}`,
+                  progressing,
+                  spinner,
+                );
+              } else {
+                spinner.succeed(`User ${email} deleted`);
+              }
+            }
             continue;
           }
           // failedEmailMigrationWithReasons++;
@@ -380,19 +390,18 @@ export const handler: Handler = async (argv) => {
         /**
          * ExistingMember belongs to many organization
          */
-        const validateToTransferResources =
+        const targettedMember =
           await emailMigrationService.splitOrMergeAccount(
             organizationId,
             ssoEmail,
-            sourceMember.id,
           );
-        if (validateToTransferResources && validateToTransferResources?.error) {
+        if (targettedMember && targettedMember?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${validateToTransferResources?.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${targettedMember?.error}`,
           );
           handleErrors(
-            `Error in merging Organization ${organizationId} Member - ${validateToTransferResources?.error}`,
+            `Error in merging Organization ${organizationId} Member - ${targettedMember?.error}`,
             progressing,
             spinner,
           );
@@ -408,7 +417,7 @@ export const handler: Handler = async (argv) => {
           await emailMigrationService.requestToTransferMemberResourcesInOrganization(
             organizationId,
             sourceMember.id,
-            targetMember.id,
+            targettedMember,
           );
         if (requestToTransferResources.error) {
           if (
@@ -551,11 +560,10 @@ export const handler: Handler = async (argv) => {
       }
 
       // Get Visitor Role Id
-      const visitorRole =
-        await emailMigrationService.getOrganizationRoleId(
-          organizationId,
-          Roles.Visitor,
-        );
+      const visitorRole = await emailMigrationService.getOrganizationRoleByType(
+        organizationId,
+        Roles.Visitor,
+      );
 
       if (visitorRole?.error) {
         failedEmailMigrationWithReasons++;

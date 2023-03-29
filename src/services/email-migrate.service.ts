@@ -151,7 +151,6 @@ export class EmailMigrationService extends FetchService {
     const orgMember = (data as any)?.organization?.members?.results || [];
 
     let member;
-
     if (orgMember.length > 0) {
       member = {
         id: orgMember[0].member.id,
@@ -204,7 +203,7 @@ export class EmailMigrationService extends FetchService {
     return member;
   }
 
-  async getOrganizationRoleId(
+  async getOrganizationRoleByType(
     organizationId: string,
     type: Roles,
   ): Promise<any> {
@@ -250,7 +249,7 @@ export class EmailMigrationService extends FetchService {
     }
     const requestSent = (data as any)?.requestTransferMemberResources || false;
 
-    if (valueExists(requestSent) && requestSent) {
+    if (valueExists(requestSent)) {
       return true;
     }
     return false;
@@ -271,7 +270,6 @@ export class EmailMigrationService extends FetchService {
    *
    * @param organizationId
    * @param ssoEmail
-   * @param sourceMemberId
    * @param targetMemberId
    * @returns targetMemberId - if it can be the newly created, or the existing one
    */
@@ -312,25 +310,23 @@ export class EmailMigrationService extends FetchService {
     if (!isOrgMember) {
       // targetOrgMember = getTargetOrgMember;
       // Get Member Role Id
-      const memberRole = await this.getOrganizationRoleId(
+      const memberRole = await this.getOrganizationRoleByType(
         organizationId,
         Roles.User,
       );
-
       if (memberRole?.error) {
         return { error: memberRole?.error };
       }
-
       const addOrgMember = await this.addMemberToOrganization(
         organizationId,
-        targetMember.id || targetMemberId,
+        valueExists(targetMember.id) ? targetMember.id : targetMemberId,
         memberRole,
       );
 
       if (addOrgMember && addOrgMember?.error) {
         return { error: addOrgMember?.error };
       }
-      return targetMember.id || targetMemberId;
     }
+    return valueExists(targetMember?.id) ? targetMember.id : targetMemberId;
   }
 }

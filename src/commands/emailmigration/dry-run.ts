@@ -151,7 +151,6 @@ export const handler: Handler = async (argv) => {
     let sourceMember;
     let targetMember;
     let sourceMemberBelongsToManyOrgs = false;
-    let targetMemberBelongsToManyOrgs = false;
 
     const progressing = `${index + 1}/${totalUsersCount} :  ${existingEmail}`;
 

@@ -146,7 +146,6 @@ export const handler: Handler = async (argv) => {
     let sourceMember;
     let targetMember;
     let sourceMemberBelongsToManyOrgs = false;
-    let targetMemberBelongsToManyOrgs = false;
 
     const progressing = `${index + 1}/${totalUsersCount} :  ${existingEmail}`;
 
@@ -264,12 +263,11 @@ export const handler: Handler = async (argv) => {
         // If the Target Member doesn't belong to many organization
 
         // Need to migrate all the relationships from source to target member - Request for transfer
-        const targettedMember =
-          await emailMigrationService.splitOrMergeAccount(
-            organizationId,
-            ssoEmail,
-            targetMember.id,
-          );
+        const targettedMember = await emailMigrationService.splitOrMergeAccount(
+          organizationId,
+          ssoEmail,
+          targetMember.id,
+        );
         if (targettedMember && targettedMember?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
@@ -283,9 +281,7 @@ export const handler: Handler = async (argv) => {
           continue;
         }
         spinner.info(
-          chalk.green(
-            `${progressing} - SSO Email already exists. \n`,
-          ),
+          chalk.green(`${progressing} - SSO Email already exists. \n`),
         );
         const requestToTransferResources =
           await emailMigrationService.requestToTransferMemberResourcesInOrganization(
@@ -293,7 +289,7 @@ export const handler: Handler = async (argv) => {
             sourceMember.id,
             targettedMember,
           );
-        if (requestToTransferResources.error) {
+        if (requestToTransferResources?.error) {
           if (
             requestToTransferResources.error &&
             requestToTransferResources.error?.statusCode === 404
@@ -321,10 +317,10 @@ export const handler: Handler = async (argv) => {
           }
           // failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources ${requestToTransferResources?.error?.message} `,
           );
           handleErrors(
-            `Failed to send request to transfer resources ${requestToTransferResources.error}`,
+            `Failed to send request to transfer resources ${requestToTransferResources?.error?.message}`,
             progressing,
             spinner,
           );
@@ -390,11 +386,10 @@ export const handler: Handler = async (argv) => {
         /**
          * ExistingMember belongs to many organization
          */
-        const targettedMember =
-          await emailMigrationService.splitOrMergeAccount(
-            organizationId,
-            ssoEmail,
-          );
+        const targettedMember = await emailMigrationService.splitOrMergeAccount(
+          organizationId,
+          ssoEmail,
+        );
         if (targettedMember && targettedMember?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
@@ -419,7 +414,7 @@ export const handler: Handler = async (argv) => {
             sourceMember.id,
             targettedMember,
           );
-        if (requestToTransferResources.error) {
+        if (requestToTransferResources?.error) {
           if (
             requestToTransferResources.error &&
             requestToTransferResources.error?.statusCode === 404
@@ -433,10 +428,10 @@ export const handler: Handler = async (argv) => {
           }
           // failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail}, Failed to send request to transfer resources ${requestToTransferResources?.error?.message}`,
           );
           handleErrors(
-            `Failed to send request to transfer resources ${requestToTransferResources.error}`,
+            `Failed to send request to transfer resources ${requestToTransferResources?.error?.message}`,
             progressing,
             spinner,
           );

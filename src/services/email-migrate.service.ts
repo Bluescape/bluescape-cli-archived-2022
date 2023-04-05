@@ -304,7 +304,9 @@ export class EmailMigrationService extends FetchService {
       if (getTargetOrgMember && getTargetOrgMember?.error) {
         return { error: getTargetOrgMember?.error };
       }
-      isOrgMember = true;
+      if (getTargetOrgMember) {
+        isOrgMember = true;
+      }
     }
     // If the ssoEmail user exists, and not a member of the organization, add him to the org.
     if (!isOrgMember) {
@@ -319,7 +321,7 @@ export class EmailMigrationService extends FetchService {
       }
       const addOrgMember = await this.addMemberToOrganization(
         organizationId,
-        valueExists(targetMember.id) ? targetMember.id : targetMemberId,
+        valueExists(targetMember?.id) ? targetMember.id : targetMemberId,
         memberRole,
       );
 

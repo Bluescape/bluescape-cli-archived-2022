@@ -263,18 +263,18 @@ export const handler: Handler = async (argv) => {
         // If the Target Member doesn't belong to many organization
 
         // Need to migrate all the relationships from source to target member - Request for transfer
-        const targettedMember = await emailMigrationService.splitOrMergeAccount(
+        const targetedMember = await emailMigrationService.splitOrMergeAccount(
           organizationId,
           ssoEmail,
           targetMember.id,
         );
-        if (targettedMember && targettedMember?.error) {
+        if (targetedMember && targetedMember?.error) {
           failedEmailMigrationWithReasons++;
           writeFailedEmailMigrationsToCsv.write(
-            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${targettedMember?.error}`,
+            `\n${existingEmail},${ssoEmail},${workspaceOwnerEmail},${targetedMember?.error}`,
           );
           handleErrors(
-            `Error in merging Organization ${organizationId} Member - ${targettedMember?.error}`,
+            `Error in merging Organization ${organizationId} Member - ${targetedMember?.error}`,
             progressing,
             spinner,
           );
@@ -287,7 +287,7 @@ export const handler: Handler = async (argv) => {
           await emailMigrationService.requestToTransferMemberResourcesInOrganization(
             organizationId,
             sourceMember.id,
-            targettedMember,
+            targetedMember,
           );
         if (requestToTransferResources?.error) {
           if (

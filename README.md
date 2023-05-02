@@ -56,6 +56,12 @@ $ bluescape user delete --from-csv=./sample/user_delete.csv --new-owner-id=zANz6
 # Add custom link to the users in the CSV file user by email Id and CSV file
 $ bluescape customlink add --from-csv=./sample/customlink.csv --blocked-domains=./sample/blocked-domains.csv
 ```
+### Siloed User Provisioning
+```sh
+# Enable autoAssociateIdentityProviderUser for an organization and add an account to an organization
+# Both organizationId and accountId are optional. So we can execute both (valid Ids) or at least one argument is required.
+$ bluescape siloeduserprovision set --organizationId="ORGANIZATION_UID" --accountId="ACCOUNT_UID"
+```
 
 
 ## Uninstall

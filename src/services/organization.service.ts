@@ -1,16 +1,42 @@
+import { Roles } from '../commands/user/role.types';
 import { FetchRequestType, Service } from '../types';
 import { FetchService } from './fetch.service';
-import { Roles } from '../commands/user/role.types';
-
+export type UpdateOrganizationProps = {
+  autoAssociateIdentityProviderUser?: boolean;
+};
 export class OrganizationService extends FetchService {
   constructor() {
     super();
   }
 
-  async getOrganizationById(
-    orgnaizationId: string
+  async getAllOrganizations(
+    pageSize?: number,
+    cursor?: string,
+    includeTotalCount = false,
   ): Promise<any> {
-    const attributes = ['id', 'canHaveGuests', 'isGuestInviteApprovalRequired', 'defaultOrganizationUserRole { id type }'];
+    let query = `{organizations(pagination:{pageSize: ${pageSize}}`;
+    if (cursor) {
+      query += `, cursor: "${cursor}"`;
+    }
+    query += `){results{id name autoAssociateIdentityProviderUser} next`;
+    if (includeTotalCount) {
+      query += ` totalItems`;
+    }
+    query += `}}`;
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, {
+      query,
+    });
+    return data;
+  }
+
+  async getOrganizationById(orgnaizationId: string): Promise<any> {
+    const attributes = [
+      'id',
+      'canHaveGuests',
+      'isGuestInviteApprovalRequired',
+      'defaultOrganizationUserRole { id type }',
+    ];
     const query = `{organization(organizationId:"${orgnaizationId}"){${attributes.concat(
       '\n',
     )}}}`;
@@ -108,8 +134,13 @@ export class OrganizationService extends FetchService {
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
   }
-  
-  async updateOrganizationMemberRole(memberId: string,orgnaizationId: string, organizationRoleId: string, newWorkspaceOwnerId?: string): Promise<any> {
+
+  async updateOrganizationMemberRole(
+    memberId: string,
+    orgnaizationId: string,
+    organizationRoleId: string,
+    newWorkspaceOwnerId?: string,
+  ): Promise<any> {
     let path;
     path = `/organizations/${orgnaizationId}/members/${memberId}/role`;
     if (newWorkspaceOwnerId) {
@@ -118,9 +149,9 @@ export class OrganizationService extends FetchService {
 
     const url = this.getUrlForService(Service.ISAM, path);
     const payload = {
-      organizationRoleId
-    }
-    
+      organizationRoleId,
+    };
+
     let data;
     try {
       data = await this.request(FetchRequestType.Patch, url, {
@@ -135,7 +166,7 @@ export class OrganizationService extends FetchService {
   async getOrganizationRoleByType(
     orgnaizationId: string,
     attributes: string[],
-    type: Roles
+    type: Roles,
   ): Promise<any> {
     const query = `{roles(
       filtering: {
@@ -154,5 +185,38 @@ export class OrganizationService extends FetchService {
     const url = this.getUrlForService(Service.ISAM_GRAPHQL);
     const { data } = await this.request(FetchRequestType.Post, url, { query });
     return data;
+  }
+
+  async updateOrganizationAutoAssociateIDPUser(
+    organizationId: string,
+    props: boolean,
+  ): Promise<any> {
+    const query = `mutation{updateOrganization(
+      organizationId:"${organizationId}", 
+      input:{autoAssociateIdentityProviderUser: ${props}}
+    ){id}}`;
+    const url = this.getUrlForService(Service.ISAM_GRAPHQL);
+    const { data } = await this.request(FetchRequestType.Post, url, { query });
+    return data;
+  }
+
+  async addOrganizationToAccount(
+    organizationId: string,
+    accountId: string,
+  ): Promise<any> {
+    const path = `/organizations/${organizationId}/accounts`;
+
+    const url = this.getUrlForService(Service.ISAM, path);
+    const payload = {
+      accountId,
+    };
+    try {
+      const data = await this.request(FetchRequestType.Patch, url, {
+        ...payload,
+      });
+      return data;
+    } catch (error) {
+      return { error };
+    }
   }
 }

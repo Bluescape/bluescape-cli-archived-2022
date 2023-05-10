@@ -1,6 +1,6 @@
 import chalk from 'chalk';
 import ora from 'ora';
-import { organizationService } from '../../services';
+import { accountService, organizationService } from '../../services';
 import { isId } from '../../utils/validators';
 import { Builder, Handler } from '../user/get.types';
 
@@ -72,6 +72,19 @@ export const handler: Handler = async (argv) => {
       }
     }
 
+    if (accountId) {
+      // Account exist or not.
+      const account = await accountService.getAccountById(accountId as string);
+      if (account.error) {
+        const message =
+          account.error.response.data.message || account.error.message;
+        spinner.fail(
+          chalk.red(`Failed to get account:  ${accountId}\nReason: ${message}`),
+        );
+        return;
+      }
+    }
+
     const mapOrganizations = async (nextCursor = null) => {
       // Get all the organizations
       // limit 100
@@ -79,14 +92,7 @@ export const handler: Handler = async (argv) => {
         data: {
           organizations: { results, next, totalItems },
         },
-      } = await organizationService.getAllOrganizations(
-        100,
-        nextCursor,
-        nextCursor === null,
-      );
-      // Assigned the total organizations
-      // totalItems prop get the first time only
-
+      } = await organizationService.getAllOrganizations(100, nextCursor);
       nextCursor = next;
 
       for await (const organization of results) {
@@ -162,9 +168,6 @@ export const handler: Handler = async (argv) => {
   } catch (e) {
     spinner.fail(chalk.red(e.message));
   }
-
-  const failedListCount =
-    failedOrgAccountWithReasons.length + failedOrgIDPWithReasons.length;
 
   const endTime = performance.now();
 

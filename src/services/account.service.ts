@@ -7,11 +7,10 @@ export class AccountService extends FetchService {
   }
 
   async getAccountById(accountId: string): Promise<any> {
-    const path = `/accounts/:accountId`;
+    const path = `/accounts/${accountId}`;
     const url = this.getUrlForService(Service.ISAM, path);
-    let data;
     try {
-      data = await this.request(FetchRequestType.Get, url);
+      const data = await this.request(FetchRequestType.Get, url);
       return data;
     } catch (error) {
       return { error };

@@ -43,9 +43,11 @@ export const handler: Handler = async (argv) => {
 
   const failedOrgIDPWithReasons = [];
   const failedOrgAccountWithReasons = [];
-  let totalOrganizationsCount = 0;
+  let organizationsIDPSuccessCount = 0;
+  let organizationsAccountSuccessCount = 0;
 
   try {
+    let primaryOrganization;
     if (organizationId) {
       // Organization exist or not.
       const organization = await organizationService.getOrganizationById(
@@ -57,6 +59,14 @@ export const handler: Handler = async (argv) => {
           chalk.red(
             `Failed to get organization:  ${organizationId}\nReason: ${organization.errors[0].message}`,
           ),
+        );
+        return;
+      }
+
+      primaryOrganization = organization.data.organization;
+      if (!primaryOrganization?.identityProvider) {
+        spinner.fail(
+          chalk.red(`Failed to get organization IDP:  ${organizationId}`),
         );
         return;
       }
@@ -76,7 +86,7 @@ export const handler: Handler = async (argv) => {
       );
       // Assigned the total organizations
       // totalItems prop get the first time only
-      totalOrganizationsCount = totalItems || totalOrganizationsCount;
+
       nextCursor = next;
 
       for await (const organization of results) {
@@ -84,25 +94,26 @@ export const handler: Handler = async (argv) => {
           if (organizationId) {
             // Given organization autoAssociateIdentityProviderUser is false then update it to true
             if (
-              !organization.autoAssociateIdentityProviderUser &&
-              organization.id === organizationId
+              organization?.identityProvider &&
+              organization?.identityProvider?.id ===
+                primaryOrganization?.identityProvider?.id
             ) {
+              // update organization IDP
               await organizationService.updateOrganizationAutoAssociateIDPUser(
                 organization.id,
-                true,
+                !organization.autoAssociateIdentityProviderUser &&
+                  organization.id === organizationId,
               );
-            } else {
-              //
-              await organizationService.updateOrganizationAutoAssociateIDPUser(
-                organization.id,
-                false,
+              organizationsIDPSuccessCount += 1;
+              spinner.succeed(
+                chalk.green(
+                  `Updated IDP for organization: ${organization?.id}`,
+                ),
               );
             }
-            spinner.succeed(
-              chalk.green(`Updated IDP for organization: ${organization?.id}`),
-            );
           }
-          if (accountId) {
+
+          if (accountId && organization?.accountId === null) {
             // account exists then update the accounts to the all the organizations in the instance.
             const data = await organizationService.addOrganizationToAccount(
               organization?.id,
@@ -120,6 +131,7 @@ export const handler: Handler = async (argv) => {
                 message,
               });
             } else {
+              organizationsAccountSuccessCount += 1;
               spinner.succeed(
                 chalk.blue(
                   `Updated account for organization: ${organization?.id}`,
@@ -131,6 +143,7 @@ export const handler: Handler = async (argv) => {
           spinner.fail(
             chalk.red(
               `Failed to Update IDP for organization: ${organization?.id}`,
+              e?.message,
             ),
           );
           failedOrgIDPWithReasons.push({
@@ -158,54 +171,31 @@ export const handler: Handler = async (argv) => {
   console.log(`\n`);
 
   spinner.info(
-    chalk.blue(
-      `Total organizations: ${totalOrganizationsCount}     Execution Time: ${(
-        endTime - startTime
-      ).toFixed(2)} ms\n`,
-    ),
+    chalk.blue(`Execution Time: ${(endTime - startTime).toFixed(2)} ms\n`),
   );
 
-  if (failedListCount === 0) {
-    let field;
-    if (organizationId) {
-      field = 'autoAssociateIdentityProviderUser';
-    }
-    if (accountId) {
-      field += 'account';
-    }
+  if (organizationId) {
     spinner.succeed(
       chalk.green(
-        `All organizations are updated with their ${field} field, Successful count - ${totalOrganizationsCount}\n`,
+        `Total no of organizations successfully updated the IDP user flag: ${organizationsIDPSuccessCount}\n`,
       ),
     );
-  } else {
-    if (organizationId) {
-      spinner.succeed(
-        chalk.green(
-          `Success to update organization IDP user flag: ${
-            totalOrganizationsCount - failedOrgIDPWithReasons.length
-          }\n`,
-        ),
-      );
-      spinner.fail(
-        chalk.red(
-          `Failed to update organization IDP user flag:  ${failedOrgIDPWithReasons.length}\n`,
-        ),
-      );
-    }
-    if (accountId) {
-      spinner.succeed(
-        chalk.green(
-          `Success count account mapped for organizations: ${
-            totalOrganizationsCount - failedOrgAccountWithReasons.length
-          }\n`,
-        ),
-      );
-      spinner.fail(
-        chalk.red(
-          `Failed count to mapped account for organizations:  ${failedOrgAccountWithReasons.length}\n`,
-        ),
-      );
-    }
+    spinner.fail(
+      chalk.red(
+        `Total no of organizations failed to update organization IDP user flag:  ${failedOrgIDPWithReasons.length}\n`,
+      ),
+    );
+  }
+  if (accountId) {
+    spinner.succeed(
+      chalk.green(
+        `Total no of organizations successfully mapped the accountId: ${organizationsAccountSuccessCount}\n`,
+      ),
+    );
+    spinner.fail(
+      chalk.red(
+        `Total no of organizations failed to map the accountId:  ${failedOrgAccountWithReasons.length}\n`,
+      ),
+    );
   }
 };

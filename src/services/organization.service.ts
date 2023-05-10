@@ -18,7 +18,7 @@ export class OrganizationService extends FetchService {
     if (cursor) {
       query += `, cursor: "${cursor}"`;
     }
-    query += `){results{id name autoAssociateIdentityProviderUser} next`;
+    query += `){results{id name autoAssociateIdentityProviderUser accountId identityProvider { id }} next`;
     if (includeTotalCount) {
       query += ` totalItems`;
     }
@@ -36,6 +36,8 @@ export class OrganizationService extends FetchService {
       'canHaveGuests',
       'isGuestInviteApprovalRequired',
       'defaultOrganizationUserRole { id type }',
+      'identityProvider { id }',
+      'accountId'
     ];
     const query = `{organization(organizationId:"${orgnaizationId}"){${attributes.concat(
       '\n',
@@ -212,6 +214,25 @@ export class OrganizationService extends FetchService {
     };
     try {
       const data = await this.request(FetchRequestType.Patch, url, {
+        ...payload,
+      });
+      return data;
+    } catch (error) {
+      return { error };
+    }
+  }
+
+  async getOrganizationIdp(
+    identityProviderId: string,
+  ): Promise<any> {
+    const path = `/identityProviders/${identityProviderId}`;
+
+    const url = this.getUrlForService(Service.ISAM, path);
+    const payload = {
+      identityProviderId,
+    };
+    try {
+      const data = await this.request(FetchRequestType.Get, url, {
         ...payload,
       });
       return data;

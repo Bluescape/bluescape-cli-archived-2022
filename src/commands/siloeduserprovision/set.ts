@@ -97,13 +97,13 @@ export const handler: Handler = async (argv) => {
 
       for await (const organization of results) {
         try {
-          if (organizationId) {
-            // Given organization autoAssociateIdentityProviderUser is false then update it to true
-            if (
-              organization?.identityProvider &&
-              organization?.identityProvider?.id ===
-                primaryOrganization?.identityProvider?.id
-            ) {
+          // Given organization autoAssociateIdentityProviderUser is false then update it to true
+          if (
+            organization?.identityProvider &&
+            organization?.identityProvider?.id ===
+              primaryOrganization?.identityProvider?.id
+          ) {
+            if (organizationId) {
               // update organization IDP
               await organizationService.updateOrganizationAutoAssociateIDPUser(
                 organization.id,
@@ -117,32 +117,31 @@ export const handler: Handler = async (argv) => {
                 ),
               );
             }
-          }
-
-          if (accountId && organization?.accountId === null) {
-            // account exists then update the accounts to the all the organizations in the instance.
-            const data = await organizationService.addOrganizationToAccount(
-              organization?.id,
-              accountId as string,
-            );
-            if (data.error) {
-              const message = data.error.response.data.message || data.error;
-              spinner.fail(
-                chalk.red(
-                  `Failed to update account for organization: ${organization?.id}. Reason: ${message}`,
-                ),
+            if (accountId && organization?.accountId === null) {
+              // account exists then update the accounts to the all the organizations in the instance.
+              const data = await organizationService.addOrganizationToAccount(
+                organization?.id,
+                accountId as string,
               );
-              failedOrgAccountWithReasons.push({
-                organizationId: organization?.id,
-                message,
-              });
-            } else {
-              organizationsAccountSuccessCount += 1;
-              spinner.succeed(
-                chalk.blue(
-                  `Updated account for organization: ${organization?.id}`,
-                ),
-              );
+              if (data.error) {
+                const message = data.error.response.data.message || data.error;
+                spinner.fail(
+                  chalk.red(
+                    `Failed to update account for organization: ${organization?.id}. Reason: ${message}`,
+                  ),
+                );
+                failedOrgAccountWithReasons.push({
+                  organizationId: organization?.id,
+                  message,
+                });
+              } else {
+                organizationsAccountSuccessCount += 1;
+                spinner.succeed(
+                  chalk.blue(
+                    `Updated account for organization: ${organization?.id}`,
+                  ),
+                );
+              }
             }
           }
         } catch (e) {

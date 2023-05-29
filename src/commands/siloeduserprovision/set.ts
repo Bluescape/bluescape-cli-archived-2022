@@ -97,12 +97,12 @@ export const handler: Handler = async (argv) => {
 
       for await (const organization of results) {
         try {
-          // Given organization autoAssociateIdentityProviderUser is false then update it to true
           if (
             organization?.identityProvider &&
             organization?.identityProvider?.id ===
               primaryOrganization?.identityProvider?.id
           ) {
+            // Given organization autoAssociateIdentityProviderUser is false then update it to true
             if (organizationId) {
               // update organization IDP
               await organizationService.updateOrganizationAutoAssociateIDPUser(
@@ -117,8 +117,8 @@ export const handler: Handler = async (argv) => {
                 ),
               );
             }
-            if (accountId && organization?.accountId === null) {
-              // account exists then update the accounts to the all the organizations in the instance.
+            // account exists then update the accounts to the all the primary / secondary organizations in the instance.
+            if (accountId) {
               const data = await organizationService.addOrganizationToAccount(
                 organization?.id,
                 accountId as string,

@@ -1,6 +1,3 @@
-import { AxiosError } from 'axios';
-import fetch from 'node-fetch';
-import { getServiceUrl } from '../conf';
 import { FetchRequestType, Service } from '../types';
 import { FetchService } from './fetch.service';
 
@@ -9,9 +6,12 @@ export class AuthService extends FetchService {
     super();
   }
   tokenParser(headers: any): string {
-    const [cookie] = headers['set-cookie'] || [''];
-    const regOutput = cookie.match(/^idToken=([^;]*);*/);
-    return regOutput.length > 0 ? regOutput[1] : null;
+    const cookie = headers['set-cookie'] || [''];
+    const [regOutput] = cookie.filter((cookieInfo) =>
+      cookieInfo.indexOf('idToken') != -1
+    );
+    const token = regOutput.match(/^idToken=([^;]*);*/);
+    return token.length > 0 ? token[1] : null;
   }
 
   async login(username: string, password: string): Promise<string> {

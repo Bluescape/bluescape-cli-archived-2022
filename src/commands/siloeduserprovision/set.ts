@@ -20,9 +20,9 @@ export const handler: Handler = async (argv) => {
   // Get the arguments
   const { organizationId, accountId } = argv;
 
-  if (!organizationId && !accountId) {
+  if (!organizationId) {
     throw new Error(
-      'Request cannot be empty. Please pass organizationId/accountId.',
+      'Request cannot be empty. Please pass organizationId.',
     );
   }
 

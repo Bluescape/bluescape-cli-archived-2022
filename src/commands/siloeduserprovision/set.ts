@@ -116,6 +116,9 @@ export const handler: Handler = async (argv) => {
                   `Updated IDP for organization: ${organization?.id}`,
                 ),
               );
+              // To mutate the autoAssociateIdentityProvider as true for the given organization
+              organization.autoAssociateIdentityProviderUser = (!organization.autoAssociateIdentityProviderUser &&
+              organization.id === organizationId);
             }
             // account exists then update the accounts to the all the primary / secondary organizations in the instance.
             if (accountId) {

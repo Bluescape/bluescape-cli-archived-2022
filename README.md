@@ -4,7 +4,7 @@
 you can install `bluescape cli` via npm.
 
 ```sh
-$ npm install bluescape/bluescape-cli#latest -g
+$ npm install bluescape/bluescape-cli-archived-2022#latest -g
 ```
 
 

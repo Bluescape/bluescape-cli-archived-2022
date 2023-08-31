@@ -1,6 +1,6 @@
 {
   "name": "@bluescape/cli",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Bluescape command line tool",
   "private": true,
   "type": "commonjs",
